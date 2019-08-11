@@ -62,7 +62,7 @@ func (r *Registry) GetAuthToken() (string, error) {
 	return "", errUnknownRegistry
 }
 
-func (r *Registry) CreateRepoIfNotExist(repo string) error {
+func (r *Registry) CreateRepoIfNotExists(repo string) error {
 	switch {
 	case r.AWS != nil:
 		return r.AWS.CreateRepoIfNotExists(repo)
