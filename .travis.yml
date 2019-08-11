@@ -14,16 +14,3 @@ cache:
   directories:
   - "$HOME/.cache/go-build"
   - "$HOME/gopath/pkg/mod"
-before_deploy:
-- make VERSION=$TRAVIS_TAG NAME=$NAME
-deploy:
-  provider: releases
-  skip_cleanup: true
-  file: "${NAME}_*"
-  file_glob: true
-  on:
-    tags: true
-    condition: "$TRAVIS_GO_VERSION = master"
-    branch: master
-  api_key:
-    secure: DTWyn8NCT+XWnIpCgt2KrcExM9b/KKNVbDGJiU3VihkRbIHPy7NHp/3Qf9Ziau0FUfHscrwZStKbbhTH2Zt2ptffSKxZcrvYRnyG5tPfGcLbz+aMMASLt2uwY4U+3Oxf2p6o94Eq2m4BTq4IGBEC1o37tRAUgNV1HnorxWHuwsgoz7Zfm/d1S8PTaV/OPD8YCr7dijOufo56gBb2LfQ9MIZHP8ebWFsFLVEvlhfyngOS/53aJwCP6fTobtqFWYzsao/AbTlUScmAdXrA6XL9Kk+Mo5vBkH4Tru6laiHFtXePyeYPOBe4uT9JSRESRww7jx3SfnGn9Fb+ihNy5DJmanSKEXN9CDr/CVD51V3IJI2KPwcQkhHmjixXaqlrS0Qa4c8dOYsjR+D+H4IrCVvBHj0RMQ6Vwl0SipEYS/iGQA0g+JLfZbPgG/6adWzS6F9oH0gkj+QgEdsd/Li0M3WRBwTKOBTioxkBlOej3Vgi/rtlFV39FuHHkaQndt3Qo5dyTjJJ5de07x4e6c90PGfuNUA+6jpz2JWKQSLnK3KjWdVxhK9NhGxtkxH+YwPdzsZGHpwFKd21CI2MlbzwGZYMMEuXy7Nd8vTfXh3hoHgEWc5S063n0+Rq+3hkRmJ8+qp5jvsDRBjZ6s5XNNt6g51iVPSWInQQx32YZLP+3APuMKA=
