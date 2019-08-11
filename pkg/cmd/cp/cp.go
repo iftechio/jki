@@ -93,7 +93,7 @@ func (o *CopyOptions) Run(args []string) error {
 
 	toReg := o.dstRegistry
 
-	err = toReg.CreateRepoIfNotExist(toRepo)
+	err = toReg.CreateRepoIfNotExists(toRepo)
 	if err != nil {
 		return err
 	}
