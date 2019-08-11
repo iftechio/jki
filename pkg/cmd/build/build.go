@@ -106,6 +106,11 @@ func (o *BuildOptions) Run() error {
 		return err
 	}
 
+	err = o.registry.CreateRepoIfNotExists(o.imageName)
+	if err != nil {
+		return err
+	}
+
 	authToken, err := o.registry.GetAuthToken()
 	if err != nil {
 		return err
