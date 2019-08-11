@@ -95,14 +95,15 @@ func (r *AWSRegistry) GetAuthToken() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	for _, token := range output.AuthorizationData {
-		encodedToken := aws.StringValue(token.AuthorizationToken)
-		data, err := base64.StdEncoding.DecodeString(encodedToken)
-		if err != nil {
-			return "", fmt.Errorf("decode ecr token: %s", err)
-		}
-		parts := strings.Split(string(data), ":")
-		return toRegistryAuth(parts[0], parts[1])
+	if len(output.AuthorizationData) < 1 {
+		return "", fmt.Errorf("missing token")
 	}
-	return "", fmt.Errorf("missing token")
+	token := output.AuthorizationData[0]
+	encodedToken := aws.StringValue(token.AuthorizationToken)
+	data, err := base64.StdEncoding.DecodeString(encodedToken)
+	if err != nil {
+		return "", fmt.Errorf("decode ecr token: %s", err)
+	}
+	parts := strings.Split(string(data), ":")
+	return toRegistryAuth(parts[0], parts[1])
 }
