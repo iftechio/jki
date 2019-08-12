@@ -32,7 +32,7 @@ func (f *ConfigFlags) LoadRegistries() (defReg string, registries map[string]*re
 func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	homedir := os.Getenv("HOME")
 	flags.StringVar(&f.configPath, "jkiconfig", path.Join(homedir, ".jki.yaml"), "Config path")
-	flags.StringVar(&f.registry, "registry", "", "The desired registry. If not set, use the `default-registry` in config.")
+	flags.StringVarP(&f.registry, "registry", "r", "", "The desired registry. If not set, use the `default-registry` in config.")
 }
 
 func New() *ConfigFlags {
