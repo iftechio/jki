@@ -24,9 +24,9 @@ $ jki config edit
 
 ```
 $ jki config view
-default-registry: aws-tokyo
+default-registry: ali
 registries:
-- name: jellow
+- name: ali
   aliyun:
     username: <USERNAME>
     password: <PASSWORD>
@@ -39,6 +39,13 @@ registries:
     region: ap-northeast-1
     account_id: <YOUR ACCOUNT ID> # 注意填写的 account id 两边要有双引号
 ```
+
+#### 2.1.4 检查配置正确性
+
+```
+$ jki config check
+```
+如果配置语法没问题的话会打印 `OK!`
 
 ### 2.2. 构建镜像
 
@@ -73,11 +80,11 @@ $ jki build --registry aws-tokyo
 ```
 $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar
 ```
-会把 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar` 该镜像复制到 `aws-tokyo` 对应的 registry 上
+会把 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar` 该镜像复制到 `ali` 对应的 registry 上
 
 
 指定目标 registry:
 ```
-$ jki cp k8s.gcr.io/etcd:3.3.10 jellow
+$ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 ```
-会把 `k8s.gcr.io/etcd:3.3.10 ` 该镜像复制到 `jellow` 对应的 registry 上
+会把 `k8s.gcr.io/etcd:3.3.10 ` 该镜像复制到 `aws-tokyo` 对应的 registry 上
