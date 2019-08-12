@@ -1,6 +1,8 @@
 package config
 
-const defaultConfig = `- name: ali
+const defaultConfig = `default-registry: ali
+registries:
+- name: ali
   aliyun:
     username: foo
     password: bar
