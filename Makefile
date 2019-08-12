@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-VERSION ?= 0.1.0
+VERSION ?= 0.0.0
 NAME ?= jki
 OS := $(shell go env GOOS)
 ARCH := $(shell go env GOARCH)
@@ -18,3 +18,4 @@ debug:
 		-X github.com/iftechio/jki/pkg/cmd/version.version=$(VERSION)" -o "$(NAME)_$(VERSION)_$(OS)_$(ARCH)"
 
 clean:
+	@rm -f jki_*
