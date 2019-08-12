@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/registry"
 )
 
 func NewCmdConfig(f cmdutils.Factory) *cobra.Command {
@@ -80,8 +81,22 @@ func NewCmdConfig(f cmdutils.Factory) *cobra.Command {
 		},
 	}
 
+	checkCmd := &cobra.Command{
+		Use:   "check",
+		Short: "Test configuration and exit",
+		Run: func(cmd *cobra.Command, args []string) {
+			configPath := cmd.Flag(configPathFlag).Value.String()
+			_, _, err := registry.LoadRegistries(configPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Println("OK!")
+		},
+	}
+
 	cmd.AddCommand(initCmd)
 	cmd.AddCommand(editCmd)
 	cmd.AddCommand(viewCmd)
+	cmd.AddCommand(checkCmd)
 	return cmd
 }
