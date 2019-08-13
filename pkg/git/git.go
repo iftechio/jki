@@ -1,12 +1,15 @@
 package git
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 )
 
 func getOutput(name string, arg ...string) (string, error) {
-	data, err := exec.Command(name, arg...).Output()
+	cmd := exec.Command(name, arg...)
+	cmd.Stderr = os.Stderr
+	data, err := cmd.Output()
 	return strings.TrimSpace(string(data)), err
 }
 
