@@ -63,6 +63,7 @@ type BuildOptions struct {
 	context        string
 	dockerFileName string
 	imageName      string
+	tagName        string
 	registry       *registry.Registry
 	dockerClient   *client.Client
 }
@@ -100,20 +101,25 @@ func (o *BuildOptions) Run() error {
 		}
 	}
 
-	currentHash, err := git.GetAbbrevCommitHash()
-	if err != nil {
-		return err
-	}
-	tag, err := git.GetTagOfCommit(currentHash)
-	if err != nil {
-		branch, err := git.GetCurrentBranch()
+	var tag string
+	if len(o.tagName) != 0 {
+		tag = o.tagName
+	} else {
+		currentHash, err := git.GetAbbrevCommitHash()
 		if err != nil {
 			return err
 		}
-		tag = fmt.Sprintf("%s-%s", branch, currentHash)
+		tag, err := git.GetTagOfCommit(currentHash)
+		if err != nil {
+			branch, err := git.GetCurrentBranch()
+			if err != nil {
+				return err
+			}
+			tag = fmt.Sprintf("%s-%s", branch, currentHash)
+		}
+		tag = strings.ReplaceAll(tag, "/", "-")
+		tag = strings.ToLower(tag)
 	}
-	tag = strings.ReplaceAll(tag, "/", "-")
-	tag = strings.ToLower(tag)
 
 	ctx := context.TODO()
 
@@ -201,5 +207,6 @@ func NewCmdBuild(f cmdutils.Factory) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&o.dockerFileName, "file", "f", "Dockerfile", "Name of the Dockerfile")
 	flags.StringVar(&o.imageName, "image-name", path.Base(wd), "Custom image name")
+	flags.StringVar(&o.tagName, "tag-name", "", "Custom tag name")
 	return cmd
 }
