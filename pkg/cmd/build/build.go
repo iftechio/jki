@@ -132,7 +132,13 @@ func (o *BuildOptions) Run() error {
 		Dockerfile: o.dockerFileName,
 	}
 
-	tarStream, err := archive.TarWithOptions(o.context, &archive.TarOptions{})
+	ignores, err := cmdutils.ReadDockerIgnore(o.context)
+	if err != nil {
+		return err
+	}
+	tarStream, err := archive.TarWithOptions(o.context, &archive.TarOptions{
+		ExcludePatterns: ignores,
+	})
 	if err != nil {
 		return fmt.Errorf("tar: %s", err)
 	}
