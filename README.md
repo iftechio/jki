@@ -4,6 +4,12 @@
 
 请到 https://github.com/iftechio/jki/releases 页面下载
 
+下载后赋予可执行权限, 然后复制到 `PATH` 中, 比如:
+```
+$ chmod +x jki_0.0.3_darwin_amd64
+# cp jki_0.0.3_darwin_amd64 /usr/local/bin/jki
+```
+
 ## 2. 使用方法
 
 ### 2.1. 生成配置
