@@ -101,24 +101,28 @@ func (o *BuildOptions) Run() error {
 		}
 	}
 
-	var tag string
+	var (
+		tag string
+		err error
+	)
 	if len(o.tagName) != 0 {
 		tag = o.tagName
 	} else {
 		currentHash, err := git.GetAbbrevCommitHash()
 		if err != nil {
-			return err
-		}
-		tag, err := git.GetTagOfCommit(currentHash)
-		if err != nil {
-			branch, err := git.GetCurrentBranch()
+			fmt.Println("WARNING: cannot get current commit, use `latest` as tag.")
+			tag = "latest"
+		} else {
+			tag, err = git.GetTagOfCommit(currentHash)
 			if err != nil {
-				return err
+				branch, err := git.GetCurrentBranch()
+				if err != nil {
+					return err
+				}
+				tag = fmt.Sprintf("%s-%s", branch, currentHash)
+				tag = strings.ToLower(strings.ReplaceAll(tag, "/", "-"))
 			}
-			tag = fmt.Sprintf("%s-%s", branch, currentHash)
 		}
-		tag = strings.ReplaceAll(tag, "/", "-")
-		tag = strings.ToLower(tag)
 	}
 
 	ctx := context.TODO()
