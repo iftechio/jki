@@ -114,4 +114,5 @@ $ jki fiximage --namespace default
 Fix Deployment/foo1 gcr.io/foo1:bar(y/n)?
 >y
 Fixing Deployment/foo1
+Replace gcr.io/foo1:bar to xxx.dkr.ecr.ap-northeast-1.amazonaws.com/foo1:bar
 ```
