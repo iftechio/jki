@@ -75,25 +75,22 @@ func (o *transferImageOptions) Run() (err error) {
 	fmt.Printf("Searching for deploy/ds to fix in namespace: %s\n", o.namespace)
 	var itemsToFix []brokenObject
 
-	podsList, err := o.kubeClient.CoreV1().Pods(o.namespace).List(metav1.ListOptions{
+	pendingPodsList, err := o.kubeClient.CoreV1().Pods(o.namespace).List(metav1.ListOptions{
 		FieldSelector: "status.phase=Pending",
 	})
 
-	pods := podsList.Items
+	errPullingPods := make([]apiv1.Pod, 0)
 
 	// filter pods
-	n := 0
-	for _, pod := range pods {
+	for _, pod := range pendingPodsList.Items {
 		if hasErrPullingContainer(pod) {
-			pods[n] = pod
-			n++
+			errPullingPods = append(errPullingPods, pod)
 		}
 	}
-	pods = pods[:n]
 
 	// find k8s objects need to fix image for
 	itemsMap := make(map[string]bool)
-	for _, pod := range pods {
+	for _, pod := range errPullingPods {
 		owner := pod.OwnerReferences[0]
 		if owner.Kind == "ReplicaSet" {
 			rs, err := o.kubeClient.AppsV1().ReplicaSets(o.namespace).Get(owner.Name, metav1.GetOptions{})
