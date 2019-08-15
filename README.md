@@ -110,9 +110,8 @@ $ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 执行命令后会逐个提示替换无法现在的镜像
 
 ```
-$ jki fiximage --namespace default
-Fix Deployment/foo1 gcr.io/foo1:bar(y/n)?
+$ jki transferimage --namespace default
+Transfer Deployment/foo1 gcr.io/foo1:bar(y/n)?
 >y
-Fixing Deployment/foo1
-Replace gcr.io/foo1:bar to xxx.dkr.ecr.ap-northeast-1.amazonaws.com/foo1:bar
+Transfer gcr.io/foo1:bar to xxx.dkr.ecr.ap-northeast-1.amazonaws.com/foo1:bar
 ```

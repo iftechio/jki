@@ -1,11 +1,9 @@
-package fiximage
+package transferimage
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/iftechio/jki/pkg/cmd/cp"
@@ -17,8 +15,6 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 func hasErrPullingContainer(pod apiv1.Pod) bool {
@@ -35,27 +31,32 @@ type brokenObject struct {
 	Name  string
 	Image string
 }
-type fixImageOptions struct {
+type transferImageOptions struct {
 	namespace   string
+	kubeClient  *kubernetes.Clientset
 	cp          *cp.CopyOptions
 	dstRegistry *registry.Registry
 }
 
-func (o *fixImageOptions) Complete(f cmdutils.Factory) error {
+func (o *transferImageOptions) Complete(f cmdutils.Factory) error {
 	o.cp = cp.NewCopyOptions()
 	dstReg, registries, err := f.LoadRegistries()
 	if err != nil {
 		return err
 	}
 	o.dstRegistry = registries[dstReg]
+	o.kubeClient, err = f.KubeClient()
+	if err != nil {
+		return err
+	}
 	return o.cp.Complete(f, nil, nil)
 }
 
-func newFixImageOptions() *fixImageOptions {
-	return &fixImageOptions{}
+func newTransferImageOptions() *transferImageOptions {
+	return &transferImageOptions{}
 }
 
-func (o *fixImageOptions) fixPodSpec(podSpec *apiv1.PodTemplateSpec, it brokenObject, domain string) {
+func (o *transferImageOptions) fixPodSpec(podSpec *apiv1.PodTemplateSpec, it brokenObject, domain string) {
 	for i, con := range podSpec.Spec.Containers {
 		if con.Image == it.Image {
 			// copy to accessable registry
@@ -65,33 +66,16 @@ func (o *fixImageOptions) fixPodSpec(podSpec *apiv1.PodTemplateSpec, it brokenOb
 			// replace with new domain
 			img.Domain = domain
 			podSpec.Spec.Containers[i].Image = img.String()
-			fmt.Printf("Replace %s to %s\n", it.Image, img.String())
+			fmt.Printf("Transfered %s to %s\n", it.Image, img.String())
 		}
 	}
 }
 
-func (o *fixImageOptions) Run(namespace *string) (err error) {
-	fmt.Printf("Searching for deploy/ds to fix in namespace: %s\n", *namespace)
+func (o *transferImageOptions) Run() (err error) {
+	fmt.Printf("Searching for deploy/ds to fix in namespace: %s\n", o.namespace)
 	var itemsToFix []brokenObject
-	var kubeconfig *string
 
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		panic(err)
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err)
-	}
-
-	podsList, err := clientset.CoreV1().Pods(*namespace).List(metav1.ListOptions{
+	podsList, err := o.kubeClient.CoreV1().Pods(o.namespace).List(metav1.ListOptions{
 		FieldSelector: "status.phase=Pending",
 	})
 
@@ -108,46 +92,41 @@ func (o *fixImageOptions) Run(namespace *string) (err error) {
 	pods = pods[:n]
 
 	// find k8s objects need to fix image for
+	itemsMap := make(map[string]bool)
 	for _, pod := range pods {
 		owner := pod.OwnerReferences[0]
 		if owner.Kind == "ReplicaSet" {
-			rs, err := clientset.AppsV1().ReplicaSets(*namespace).Get(owner.Name, metav1.GetOptions{})
+			rs, err := o.kubeClient.AppsV1().ReplicaSets(o.namespace).Get(owner.Name, metav1.GetOptions{})
 			if err != nil {
-				panic(err)
+				return err
 			}
 			owner = rs.OwnerReferences[0]
 		}
 		for _, con := range pod.Status.ContainerStatuses {
 			if con.State.Waiting.Reason == "ImagePullBackOff" || con.State.Waiting.Reason == "ErrImagePull" {
-				itemsToFix = append(itemsToFix, brokenObject{
-					Kind:  owner.Kind,
-					Name:  owner.Name,
-					Image: con.Image,
-				})
+				// put unique items
+				if !itemsMap[owner.Kind+"/"+owner.Name] {
+					itemsMap[owner.Kind+"/"+owner.Name] = true
+					itemsToFix = append(itemsToFix, brokenObject{
+						Kind:  owner.Kind,
+						Name:  owner.Name,
+						Image: con.Image,
+					})
+				}
 			}
 		}
 	}
 
-	// remove duplicated
-	itemsMap := make(map[string]bool)
-	n = 0
-	for _, it := range itemsToFix {
-		if _, ok := itemsMap[it.Kind+"/"+it.Name]; !ok {
-			itemsToFix[n] = it
-			n++
-		}
-	}
-	itemsToFix = itemsToFix[:n]
-
-	deploymentClient := clientset.AppsV1().Deployments(*namespace)
-	dsClient := clientset.AppsV1().DaemonSets(*namespace)
+	deploymentClient := o.kubeClient.AppsV1().Deployments(o.namespace)
+	dsClient := o.kubeClient.AppsV1().DaemonSets(o.namespace)
+	stsClient := o.kubeClient.AppsV1().StatefulSets(o.namespace)
 
 	if len(itemsToFix) == 0 {
 		fmt.Println("Found no image to fix")
 		return nil
 	}
 	for _, it := range itemsToFix {
-		fmt.Printf("Fix %s/%s %s(y/n)?\n", it.Kind, it.Name, it.Image)
+		fmt.Printf("Transfer %s/%s %s(y/n)?\n", it.Kind, it.Name, it.Image)
 		buf := bufio.NewReader(os.Stdin)
 		fmt.Print("> ")
 		sentence, err := buf.ReadBytes('\n')
@@ -155,7 +134,6 @@ func (o *fixImageOptions) Run(namespace *string) (err error) {
 			return err
 		}
 		if strings.ToLower(strings.TrimSpace(string(sentence))) == "y" {
-			fmt.Printf("Fixing %s/%s \n", it.Kind, it.Name)
 			switch it.Kind {
 			case "Deployment":
 				deploy, err := deploymentClient.Get(it.Name, metav1.GetOptions{})
@@ -177,25 +155,34 @@ func (o *fixImageOptions) Run(namespace *string) (err error) {
 				if err != nil {
 					return err
 				}
+			case "StatefulSet":
+				sts, err := stsClient.Get(it.Name, metav1.GetOptions{})
+				if err != nil {
+					return err
+				}
+				o.fixPodSpec(&sts.Spec.Template, it, o.dstRegistry.Domain())
+				_, err = stsClient.Update(sts)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 	return err
 }
 
-// NewCmdFixImage create fix image command
-func NewCmdFixImage(f cmdutils.Factory) *cobra.Command {
-	var namespace string
-	o := newFixImageOptions()
+// NewCmdTransferImage create fix image command
+func NewCmdTransferImage(f cmdutils.Factory) *cobra.Command {
+	o := newTransferImageOptions()
 	cmd := &cobra.Command{
-		Use:   "fiximage",
+		Use:   "transferimage",
 		Short: "Auto cp images to an accessable registry and modify deployment image",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmdutils.CheckError(o.Complete(f))
-			cmdutils.CheckError(o.Run(&namespace))
+			cmdutils.CheckError(o.Run())
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&namespace, "namespace", "n", "default", "NS")
+	flags.StringVarP(&o.namespace, "namespace", "n", "default", "NS")
 	return cmd
 }
