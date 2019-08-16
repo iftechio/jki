@@ -5,6 +5,7 @@
 请到 https://github.com/bario/jki/releases 页面下载
 
 下载后赋予可执行权限, 然后复制到 `PATH` 中, 比如:
+
 ```
 $ chmod +x jki_0.0.3_darwin_amd64
 # cp jki_0.0.3_darwin_amd64 /usr/local/bin/jki
@@ -51,31 +52,37 @@ registries:
 ```
 $ jki config check
 ```
+
 如果配置语法没问题的话会打印 `OK!`
 
 ### 2.2. 构建镜像
 
 默认情况下会把构建出来的镜像推送到配置里指定的 `default-registry`
+
 ```
 $ jki build
 ```
 
 指定 Dockerfile 路径:
+
 ```
 $ jki build -f <YOUR Dockerfile>
 ```
 
 指定构建目录:
+
 ```
 $ jki build <YOUR DIR>
 ```
 
 指定镜像的名字:
+
 ```
 $ jki build --image-name <IMAGE NAME>
 ```
 
 指定要推送的 registry (以上面的配置为例):
+
 ```
 $ jki build --registry aws-tokyo
 ```
@@ -83,14 +90,28 @@ $ jki build --registry aws-tokyo
 ### 2.3. 跨云服务商复制镜像
 
 以上面的配置为例:
+
 ```
 $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar
 ```
+
 会把 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar` 该镜像复制到 `ali` 对应的 registry 上
 
-
 指定目标 registry:
+
 ```
 $ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 ```
-会把 `k8s.gcr.io/etcd:3.3.10 ` 该镜像复制到 `aws-tokyo` 对应的 registry 上
+
+会把 `k8s.gcr.io/etcd:3.3.10` 该镜像复制到 `aws-tokyo` 对应的 registry 上
+
+### 2.4. 自动替换修复 deployment 不能访问的镜像
+
+执行命令后会逐个提示替换无法现在的镜像
+
+```
+$ jki transferimage --namespace default
+Transfer Deployment/foo1 gcr.io/foo1:bar(y/n)?
+>y
+Transfer gcr.io/foo1:bar to xxx.dkr.ecr.ap-northeast-1.amazonaws.com/foo1:bar
+```

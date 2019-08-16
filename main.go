@@ -7,6 +7,7 @@ import (
 	"github.com/bario/jki/pkg/cmd/config"
 	"github.com/bario/jki/pkg/cmd/configflags"
 	"github.com/bario/jki/pkg/cmd/cp"
+	"github.com/bario/jki/pkg/cmd/transferimage"
 	cmdutils "github.com/bario/jki/pkg/cmd/utils"
 	"github.com/bario/jki/pkg/cmd/version"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ func main() {
 	rootCmd := cobra.Command{}
 	cf.AddFlags(rootCmd.PersistentFlags())
 
+	rootCmd.AddCommand(transferimage.NewCmdTransferImage(factory))
 	rootCmd.AddCommand(cp.NewCmdCp(factory))
 	rootCmd.AddCommand(config.NewCmdConfig(factory))
 	rootCmd.AddCommand(build.NewCmdBuild(factory))

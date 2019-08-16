@@ -5,12 +5,14 @@ import (
 	"github.com/bario/jki/pkg/registry"
 
 	"github.com/docker/docker/client"
+	"k8s.io/client-go/kubernetes"
 )
 
 type Factory interface {
 	DockerClient() (*client.Client, error)
 	LoadRegistries() (defReg string, registries map[string]*registry.Registry, err error)
 	ToResolver() (*registry.Resolver, error)
+	KubeClient() (*kubernetes.Clientset, error)
 }
 
 type factoryImpl struct {
@@ -27,6 +29,9 @@ func (f *factoryImpl) LoadRegistries() (defReg string, registries map[string]*re
 
 func (f *factoryImpl) ToResolver() (*registry.Resolver, error) {
 	return f.configFlags.ToResolver()
+}
+func (f *factoryImpl) KubeClient() (*kubernetes.Clientset, error) {
+	return f.configFlags.KubeClient()
 }
 
 func NewFactory(cflags *configflags.ConfigFlags) Factory {
