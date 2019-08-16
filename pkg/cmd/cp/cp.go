@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	cmdutils "github.com/iftechio/jki/pkg/cmd/utils"
+	"github.com/iftechio/jki/pkg/image"
 	"github.com/iftechio/jki/pkg/registry"
 	"github.com/spf13/cobra"
 )
@@ -77,29 +77,17 @@ func (o *CopyOptions) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-
-	var toRepo string
-	parts := strings.Split(frImg, "/")
-	repoWithTag := parts[len(parts)-1]
-	parts = strings.Split(repoWithTag, ":")
-	if len(parts) == 1 {
-		// missing colon
-		repoWithTag += ":latest"
-		frImg += ":latest"
-		toRepo = parts[0]
-	} else {
-		toRepo = parts[0]
-	}
-
+	img := image.FromString(frImg)
 	toReg := o.dstRegistry
 
-	err = toReg.CreateRepoIfNotExists(toRepo)
+	err = toReg.CreateRepoIfNotExists(img.Repo)
 	if err != nil {
 		return err
 	}
 
 	domain := toReg.Domain()
-	toImg := domain + "/" + repoWithTag
+	img.Domain = domain
+	toImg := img.String()
 	_ = o.dockerClient.ImageTag(ctx, frImg, toImg)
 
 	toToken, err := toReg.GetAuthToken()
