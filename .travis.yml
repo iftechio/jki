@@ -17,6 +17,7 @@ before_deploy:
 - make VERSION=${TRAVIS_TAG#v}
 deploy:
   provider: releases
+  name: Release $TRAVIS_TAG
   api_key:
     secure: Ronll/NvuCq/P51UW9ImJ1O4XLlGyaAoVSFESlr1kgCXncBXSefWtk2LBnPEyHVuiMy6kc2winqFtBBf9WLVMgk0uTImj5/ybe1SSRk4TAC/gv+1Ii7MKScuxKIfA+OK3wUXb8+F1qf3m3WPpq9Z2IP55mMWbfZqeyVTgfMwmujK2DQwasSJS7w/GNuUMGT3cTPOZdKyiKlMVCFcBwOrDpWFHDVcktsakq8xk+APEfw2Gd1xzKNr8sIGjvCzdZkK8BTo4vy1bDvGZ5m00dPsLhs3OsRjkzvQV8y4IhHCgjUbkJPfWWE/x8vS+vWTQ08He74tqrwL9QMOlOsOhQVcp2WpsYdyHBZZK40ohdwLOlksQ14TzC23NhTnMFy97vtDkmbwnoWNOtnjUaNxPPvE0pERf078e3FfI8w+Sq1F/7MIb65sUnoIKvbLPXMR8uTpz0eS77wgPQUyXmEjnZ3ik3OMYnwB0m9iH+PhZYJrYMEoOWOr6dCn5nG/5LK87i76lBGGBbYkLAtAOETCX/w+7R5c+HxvoJOLiZgEOJSK1TFV+q8BZBzdY6jbOIrTSms7yPZG4q8fyLvohnMv8jQs/kczr3vmFIkYs6UWjLuHx5H75IDYoaRXcbtqpQN5/zPhDWkciadimh9aGFEKdwSWEOiEuxRq+55oG+AR/3tmeZw=
   file: jki_*.tar.gz
