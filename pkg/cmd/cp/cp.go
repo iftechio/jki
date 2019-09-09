@@ -57,26 +57,35 @@ func (o *CopyOptions) Validate(args []string) error {
 func (o *CopyOptions) Run(args []string) error {
 	frImg := args[0]
 	ctx := context.TODO()
-
-	frToken, err := o.resolver.ResolveRegistryAuth(frImg)
-	if err != nil {
-		return err
-	}
-
-	out, err := o.dockerClient.ImagePull(ctx, frImg, types.ImagePullOptions{RegistryAuth: frToken})
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("===== Pulling %s =====\n", frImg)
-	defer out.Close()
-
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
 
-	err = jsonmessage.DisplayJSONMessagesStream(out, os.Stdout, termFd, isTerm, nil)
+	_, _, err := o.dockerClient.ImageInspectWithRaw(ctx, frImg)
 	if err != nil {
-		return err
+		if client.IsErrNotFound(err) {
+			// not exist locally
+			// try to pull from registry
+			frToken, err := o.resolver.ResolveRegistryAuth(frImg)
+			if err != nil {
+				return err
+			}
+
+			out, err := o.dockerClient.ImagePull(ctx, frImg, types.ImagePullOptions{RegistryAuth: frToken})
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("===== Pulling %s =====\n", frImg)
+			defer out.Close()
+
+			err = jsonmessage.DisplayJSONMessagesStream(out, os.Stdout, termFd, isTerm, nil)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
+
 	img := image.FromString(frImg)
 	toReg := o.dstRegistry
 

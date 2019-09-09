@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/bario/jki/pkg/cmd/build"
+	"github.com/bario/jki/pkg/cmd/completion"
 	"github.com/bario/jki/pkg/cmd/config"
 	"github.com/bario/jki/pkg/cmd/configflags"
 	"github.com/bario/jki/pkg/cmd/cp"
@@ -13,18 +14,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type Commander func(cmdutils.Factory) *cobra.Command
+
 func main() {
 	cf := configflags.New()
 	factory := cmdutils.NewFactory(cf)
 
-	rootCmd := cobra.Command{}
+	rootCmd := cobra.Command{
+		Use: "jki",
+	}
 	cf.AddFlags(rootCmd.PersistentFlags())
 
-	rootCmd.AddCommand(transferimage.NewCmdTransferImage(factory))
-	rootCmd.AddCommand(cp.NewCmdCp(factory))
-	rootCmd.AddCommand(config.NewCmdConfig(factory))
-	rootCmd.AddCommand(build.NewCmdBuild(factory))
-	rootCmd.AddCommand(version.NewCmdVersion())
+	commanders := []Commander{
+		build.NewCmdBuild,
+		completion.NewCmdCompletion,
+		config.NewCmdConfig,
+		cp.NewCmdCp,
+		transferimage.NewCmdTransferImage,
+		version.NewCmdVersion,
+	}
+
+	for _, c := range commanders {
+		rootCmd.AddCommand(c(factory))
+	}
 
 	err := rootCmd.Execute()
 	if err != nil {
