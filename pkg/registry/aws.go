@@ -20,6 +20,8 @@ type AWSRegistry struct {
 	LifecyclePolicyText string `json:"lifecycle_policy_text" yaml:"lifecycle_policy_text"`
 }
 
+var _ RegistryInterface = &AWSRegistry{}
+
 func newAWSSession(region, accessKey, secretKey string) (*session.Session, error) {
 	return session.NewSession(&aws.Config{
 		Region:      aws.String(region),

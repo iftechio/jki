@@ -94,8 +94,7 @@ func (o *CopyOptions) Run(args []string) error {
 		return err
 	}
 
-	domain := toReg.Domain()
-	img.Domain = domain
+	img.Domain = toReg.Domain()
 	toImg := img.String()
 	_ = o.dockerClient.ImageTag(ctx, frImg, toImg)
 
