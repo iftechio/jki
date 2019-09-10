@@ -86,9 +86,15 @@ func NewCmdConfig(f cmdutils.Factory) *cobra.Command {
 		Short: "Test configuration and exit",
 		Run: func(cmd *cobra.Command, args []string) {
 			configPath := cmd.Flag(configPathFlag).Value.String()
-			_, _, err := registry.LoadRegistries(configPath)
+			_, regs, err := registry.LoadRegistries(configPath)
 			if err != nil {
 				log.Fatal(err)
+			}
+			for name, reg := range regs {
+				if err := reg.Verify(); err != nil {
+					fmt.Fprintf(os.Stderr, "%s: invalid config: %s\n", name, err)
+					return
+				}
 			}
 			fmt.Println("OK!")
 		},

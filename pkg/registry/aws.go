@@ -109,3 +109,32 @@ func (r *AWSRegistry) GetAuthToken() (string, error) {
 	parts := strings.Split(string(data), ":")
 	return toRegistryAuth(parts[0], parts[1])
 }
+
+func (r *AWSRegistry) Verify() error {
+	tocheck := []struct {
+		name, value string
+	}{
+		{
+			name:  "region",
+			value: r.Region,
+		},
+		{
+			name:  "account_id",
+			value: r.AccountID,
+		},
+		{
+			name:  "access_key",
+			value: r.AccessKey,
+		},
+		{
+			name:  "secret_access_key",
+			value: r.SecretAccessKey,
+		},
+	}
+	for _, c := range tocheck {
+		if len(c.value) == 0 {
+			return fmt.Errorf("%s cannot be empty", c.name)
+		}
+	}
+	return nil
+}
