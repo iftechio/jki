@@ -61,3 +61,13 @@ func (r *Registry) CreateRepoIfNotExists(repo string) error {
 	}
 	return errUnknownRegistry
 }
+
+func (r *Registry) Verify() error {
+	switch {
+	case r.AWS != nil:
+		return r.AWS.Verify()
+	case r.AliCloud != nil:
+		return r.AliCloud.Verify()
+	}
+	return errUnknownRegistry
+}

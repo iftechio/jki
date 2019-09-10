@@ -54,5 +54,33 @@ func (r *AliCloudRegistry) GetAuthToken() (string, error) {
 		}
 		return toRegistryAuth(resp.Data.UserName, resp.Data.AuthorizationToken)
 	}
-	return "", fmt.Errorf("neither username and password nor access key and secret access key are specified")
+	return "", fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
+}
+
+func (r *AliCloudRegistry) Verify() error {
+	tocheck := []struct {
+		name, value string
+	}{
+		{
+			name:  "region",
+			value: r.Region,
+		},
+		{
+			name:  "namespace",
+			value: r.Namespace,
+		},
+	}
+	for _, c := range tocheck {
+		if len(c.value) == 0 {
+			return fmt.Errorf("%s cannot be empty", c.name)
+		}
+	}
+	isNotEmpty := func(s string) bool {
+		return len(s) != 0
+	}
+	if !((isNotEmpty(r.Username) && isNotEmpty(r.Password)) || (isNotEmpty(r.AccessKey) && isNotEmpty(r.SecretAccessKey))) {
+		return fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
+	}
+
+	return nil
 }
