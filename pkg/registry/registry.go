@@ -24,23 +24,13 @@ func toRegistryAuth(user, passwd string) (string, error) {
 	return base64.URLEncoding.EncodeToString(data), nil
 }
 
-/*
-type NormalRegistry struct {
-	Name     string `json:"name" yaml:"name"`
-	Username string `json:"username" yaml:"username"`
-	Password string `json:"password" yaml:"password"`
-}
-
-func (r *NormalRegistry) GetAuthToken() (string, error) {
-	return toRegistryAuth(r.Username, r.Password)
-}
-*/
-
 type Registry struct {
 	Name     string            `json:"name" yaml:"name"`
 	AliCloud *AliCloudRegistry `json:"aliyun" yaml:"aliyun"`
 	AWS      *AWSRegistry      `json:"aws" yaml:"aws"`
 }
+
+var _ RegistryInterface = &Registry{}
 
 func (r *Registry) Domain() string {
 	switch {

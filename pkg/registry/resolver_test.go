@@ -1,35 +1,40 @@
 package registry
 
-import "testing"
+import (
+	"regexp"
+	"testing"
+)
 
 func TestRegexp(t *testing.T) {
 	t.Parallel()
-	imgs := []string{
-		"131061968068.dkr.ecr.ap-northeast-1.amazonaws.com/api-gateway-controller:master-636e3c1",
-		"804775010343.dkr.ecr.cn-north-1.amazonaws.com.cn/anti-spider:master-2d9b02f",
+	testCases := []struct {
+		re     *regexp.Regexp
+		image  string
+		region string
+	}{
+		{
+			re:     reAWSECR,
+			image:  "131061968068.dkr.ecr.ap-northeast-1.amazonaws.com/api-gateway-controller:master-636e3c1",
+			region: "ap-northeast-1",
+		},
+		{
+			re:     reAWSECR,
+			image:  "804775010343.dkr.ecr.cn-north-1.amazonaws.com.cn/anti-spider:master-2d9b02f",
+			region: "cn-north-1",
+		},
+		{
+			re:     reAliCloud,
+			image:  "registry.cn-hangzhou.aliyuncs.com/iftech/api-gateway-controller:master-636e3c1",
+			region: "cn-hangzhou",
+		},
 	}
-	regions := []string{"ap-northeast-1", "cn-north-1"}
-	for i, img := range imgs {
-		matches := reAWSECR.FindStringSubmatch(img)
+	for _, tC := range testCases {
+		matches := tC.re.FindStringSubmatch(tC.image)
 		if matches == nil {
 			t.Fatalf("no matches")
 		}
-		if matches[1] != regions[i] {
-			t.Fatalf("wrong region: expect: %s, get: %s", regions[i], matches[1])
-		}
-	}
-
-	imgs = []string{
-		"registry.cn-hangzhou.aliyuncs.com/iftech/api-gateway-controller:master-636e3c1",
-	}
-	regions = []string{"cn-hangzhou"}
-	for i, img := range imgs {
-		matches := reAliCloud.FindStringSubmatch(img)
-		if matches == nil {
-			t.Fatalf("no matches")
-		}
-		if matches[1] != regions[i] {
-			t.Fatalf("wrong region: expect: %s, get: %s", regions[i], matches[1])
+		if matches[1] != tC.region {
+			t.Fatalf("wrong region: expect: %s, get: %s", tC.region, matches[1])
 		}
 	}
 }
