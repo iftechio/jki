@@ -7,8 +7,11 @@
 下载后赋予可执行权限, 然后复制到 `PATH` 中, 比如:
 
 ```
-$ chmod +x jki_0.0.3_darwin_amd64
-# cp jki_0.0.3_darwin_amd64 /usr/local/bin/jki
+VERSION=0.0.7
+OS=darwin
+wget "https://github.com/bario/jki/releases/download/v$VERSION/jki_${VERSION}_${OS}_amd64.tar.gz"
+tar xf jki_${VERSION}_${OS}_amd64.tar.gz
+cp jki_${VERSION}_${OS}_amd64/jki /usr/local/bin/
 ```
 
 ## 2. 使用方法
@@ -35,8 +38,9 @@ default-registry: ali
 registries:
 - name: ali
   aliyun:
-    username: <USERNAME>
-    password: <PASSWORD>
+    # 使用子账号登录后访问 https://usercenter.console.aliyun.com/#/manage/ak 创建自己的 access key
+    access_key: <YOUR ACCESS KEY ID>
+    secret_access_key: <YOUR ACCESS KEY SECRET>
     region: cn-hangzhou
     namespace: <YOUR NAMESPACE>
 - name: aws-tokyo
