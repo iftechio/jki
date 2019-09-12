@@ -8,6 +8,7 @@ install: true
 env:
 - GO111MODULE=on NAME=jki
 script:
+- diff -u <(echo -n) <(gofmt -d ./)
 - go test -v -race ./...
 cache:
   directories:
