@@ -32,42 +32,32 @@ type Registry struct {
 
 var _ RegistryInterface = &Registry{}
 
-func (r *Registry) Domain() string {
-	switch {
-	case r.AWS != nil:
-		return r.AWS.Domain()
-	case r.AliCloud != nil:
-		return r.AliCloud.Domain()
+func (r *Registry) registryInterface() RegistryInterface {
+	if r.AliCloud != nil {
+		return r.AliCloud
 	}
-	return ""
+	if r.AWS != nil {
+		return r.AWS
+	}
+	panic(errUnknownRegistry)
+}
+
+func (r *Registry) Domain() string {
+	return r.registryInterface().Domain()
 }
 
 func (r *Registry) GetAuthToken() (string, error) {
-	switch {
-	case r.AWS != nil:
-		return r.AWS.GetAuthToken()
-	case r.AliCloud != nil:
-		return r.AliCloud.GetAuthToken()
-	}
-	return "", errUnknownRegistry
+	return r.registryInterface().GetAuthToken()
 }
 
 func (r *Registry) CreateRepoIfNotExists(repo string) error {
-	switch {
-	case r.AWS != nil:
-		return r.AWS.CreateRepoIfNotExists(repo)
-	case r.AliCloud != nil:
-		return r.AliCloud.CreateRepoIfNotExists(repo)
-	}
-	return errUnknownRegistry
+	return r.registryInterface().CreateRepoIfNotExists(repo)
+}
+
+func (r *Registry) GetLatestTag(repo string) (string, error) {
+	return r.registryInterface().GetLatestTag(repo)
 }
 
 func (r *Registry) Verify() error {
-	switch {
-	case r.AWS != nil:
-		return r.AWS.Verify()
-	case r.AliCloud != nil:
-		return r.AliCloud.Verify()
-	}
-	return errUnknownRegistry
+	return r.registryInterface().Verify()
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -19,6 +20,7 @@ type CopyOptions struct {
 	resolver     *registry.Resolver
 	dockerClient *client.Client
 	dstRegistry  *registry.Registry
+	saveImage    bool
 }
 
 func (o *CopyOptions) Complete(f cmdutils.Factory, cmd *cobra.Command, args []string) error {
@@ -64,7 +66,15 @@ func (o *CopyOptions) Run(args []string) error {
 		if client.IsErrNotFound(err) {
 			// not exist locally
 			// try to pull from registry
-			frToken, err := o.resolver.ResolveRegistryAuth(frImg)
+			reg, err := o.resolver.ResolveRegistryByImage(frImg)
+			if err != nil {
+				return err
+			}
+			frToken, err := reg.GetAuthToken()
+			if err != nil {
+				return err
+			}
+			frImg, err = o.completeImageStr(frImg, reg)
 			if err != nil {
 				return err
 			}
@@ -73,6 +83,7 @@ func (o *CopyOptions) Run(args []string) error {
 			if err != nil {
 				return err
 			}
+			defer o.removeImage(ctx, frImg)
 
 			fmt.Printf("===== Pulling %s =====\n", frImg)
 			defer out.Close()
@@ -88,7 +99,6 @@ func (o *CopyOptions) Run(args []string) error {
 
 	img := image.FromString(frImg)
 	toReg := o.dstRegistry
-
 	err = toReg.CreateRepoIfNotExists(img.Repo)
 	if err != nil {
 		return err
@@ -106,6 +116,7 @@ func (o *CopyOptions) Run(args []string) error {
 	if err != nil {
 		return err
 	}
+	defer o.removeImage(ctx, toImg)
 
 	fmt.Printf("===== Pushing %s =====\n", toImg)
 	defer pushOut.Close()
@@ -133,5 +144,29 @@ func NewCmdCp(f cmdutils.Factory) *cobra.Command {
 			cmdutils.CheckError(o.Run(args))
 		},
 	}
+
+	flags := cmd.Flags()
+	flags.BoolVar(&o.saveImage, "save-image", o.saveImage, "The local image will not be deleted after the copy is completed")
 	return cmd
+}
+
+func (o *CopyOptions) removeImage(ctx context.Context, imageName string) (err error) {
+	if o.saveImage {
+		return nil
+	}
+	_, err = o.dockerClient.ImageRemove(ctx, imageName, types.ImageRemoveOptions{})
+	return err
+}
+
+func (o *CopyOptions) completeImageStr(imgStr string, reg registry.RegistryInterface) (string, error) {
+	if strings.Contains(imgStr, ":") {
+		return imgStr, nil
+	}
+	splits := strings.Split(imgStr, "/")
+	repo := splits[len(splits)-1]
+	tag, err := reg.GetLatestTag(repo)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s:%s", imgStr, tag), nil
 }
