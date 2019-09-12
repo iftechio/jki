@@ -61,7 +61,7 @@ func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
 	var client *cr.Client
 	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {
 		client, err = cr.NewClientWithAccessKey(r.Region, r.AccessKey, r.SecretAccessKey)
-	} else if len(r.Username) != 0 && len(r.Password) != 0 {
+	} else {
 		err = fmt.Errorf("dont support username and password, please use access_key!")
 	}
 	if err != nil {

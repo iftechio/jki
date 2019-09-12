@@ -83,7 +83,6 @@ func (o *CopyOptions) Run(args []string) error {
 			if err != nil {
 				return err
 			}
-			defer o.removeImage(ctx, frImg)
 
 			fmt.Printf("===== Pulling %s =====\n", frImg)
 			defer out.Close()
@@ -116,7 +115,6 @@ func (o *CopyOptions) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	defer o.removeImage(ctx, toImg)
 
 	fmt.Printf("===== Pushing %s =====\n", toImg)
 	defer pushOut.Close()
@@ -125,6 +123,9 @@ func (o *CopyOptions) Run(args []string) error {
 	if err != nil {
 		return err
 	}
+
+	o.removeImage(ctx, frImg,toImg)
+
 	fmt.Println("Done!")
 	return nil
 }
@@ -150,12 +151,16 @@ func NewCmdCp(f cmdutils.Factory) *cobra.Command {
 	return cmd
 }
 
-func (o *CopyOptions) removeImage(ctx context.Context, imageName string) (err error) {
+func (o *CopyOptions) removeImage(ctx context.Context, imageNames ...string) (err error) {
 	if o.saveImage {
 		return nil
 	}
-	_, err = o.dockerClient.ImageRemove(ctx, imageName, types.ImageRemoveOptions{})
-	return err
+	for _ , name := range imageNames{
+		if _, err = o.dockerClient.ImageRemove(ctx, name, types.ImageRemoveOptions{}); err != nil {
+			return
+		}
+	}
+	return
 }
 
 func (o *CopyOptions) completeImageStr(imgStr string, reg registry.RegistryInterface) (string, error) {
