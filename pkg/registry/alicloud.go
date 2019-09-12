@@ -57,6 +57,60 @@ func (r *AliCloudRegistry) GetAuthToken() (string, error) {
 	return "", fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
 }
 
+func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
+	var client *cr.Client
+	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {
+		client, err = cr.NewClientWithAccessKey(r.Region, r.AccessKey, r.SecretAccessKey)
+	} else {
+		err = fmt.Errorf("dont support username and password, please use access_key!")
+	}
+	if err != nil {
+		err = fmt.Errorf("create cr client: %s", err)
+		return
+	}
+
+	req := cr.CreateGetRepoTagsRequest()
+	req.Domain = fmt.Sprintf("cr.%s.aliyuncs.com", r.Region)
+	req.RepoNamespace = r.Namespace
+	req.RepoName = repo
+
+	var rawResp *cr.GetRepoTagsResponse
+	rawResp, err = client.GetRepoTags(req)
+	if err != nil {
+		return
+	}
+	var resp struct {
+		Data struct {
+			Total int `json:"total"`
+			Page  int `json:"page"`
+			Tags  []struct {
+				Status      string `json:"status"`
+				Digest      string `json:"digest"`
+				ImageId     string `json:"imageId"`
+				ImageCreate int    `json:"imageCreate"`
+				Tag         string `json:"tag"`
+				ImageSize   int    `json:"imageSize"`
+			} `json:"tags"`
+		} `json:"data"`
+	}
+	err = json.Unmarshal(rawResp.GetHttpContentBytes(), &resp)
+	if err != nil {
+		return
+	}
+
+	if resp.Data.Total == 0 {
+		err = fmt.Errorf("repo has no image")
+		return
+	}
+	if len(resp.Data.Tags) == 0 {
+		err = fmt.Errorf("image has no tag")
+		return
+	}
+
+	tag = resp.Data.Tags[0].Tag
+	return
+}
+
 func (r *AliCloudRegistry) Verify() error {
 	tocheck := []struct {
 		name, value string
