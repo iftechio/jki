@@ -38,7 +38,7 @@ func (r *Resolver) ResolveName(name string) (regKind string, registry *Registry,
 	}
 }
 
-func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface,err error){
+func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface, err error) {
 	if matches := reAWSECR.FindStringSubmatch(img); matches != nil {
 		region := matches[1]
 		for _, reg := range r.registries {
