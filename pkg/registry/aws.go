@@ -3,6 +3,7 @@ package registry
 import (
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -130,6 +131,10 @@ func (r *AWSRegistry) GetLatestTag(repo string) (tag string, err error) {
 		err = fmt.Errorf("repo has no image")
 		return
 	}
+	// The results returned are unordered
+	sort.Slice(output.ImageDetails, func(i, j int) bool {
+		return output.ImageDetails[i].ImagePushedAt.Before(*output.ImageDetails[j].ImagePushedAt)
+	})
 
 	detail := output.ImageDetails[len(output.ImageDetails)-1]
 	if len(detail.ImageTags) == 0 {
