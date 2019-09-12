@@ -8,8 +8,8 @@ import (
 var (
 	reAWSECR   = regexp.MustCompile(`\d+\.dkr\.ecr\.(?P<Region>[\w-]+)\.amazonaws\.com`)
 	reAliCloud = regexp.MustCompile(`registry\.(?P<Region>[\w-]+)\.aliyuncs.com`)
-	//reAliCloudVpc      = regexp.MustCompile(`registry-vpc\.[\w-]+\.aliyuncs.com`)
-	//reAliCloudInternal = regexp.MustCompile(`registry-internal\.[\w-]+\.aliyuncs.com`)
+	// reAliCloudVpc      = regexp.MustCompile(`registry-vpc\.[\w-]+\.aliyuncs.com`)
+	// reAliCloudInternal = regexp.MustCompile(`registry-internal\.[\w-]+\.aliyuncs.com`)
 )
 
 const (
@@ -38,7 +38,7 @@ func (r *Resolver) ResolveName(name string) (regKind string, registry *Registry,
 	}
 }
 
-func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface, err error) {
+func (r *Resolver) ResolveRegistryByImage(img string) (RegistryInterface, error) {
 	if matches := reAWSECR.FindStringSubmatch(img); matches != nil {
 		region := matches[1]
 		for _, reg := range r.registries {
@@ -46,8 +46,7 @@ func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface, err
 				continue
 			}
 			if reg.AWS.Region == region {
-				ri = reg
-				break
+				return reg, nil
 			}
 		}
 	} else if matches := reAliCloud.FindStringSubmatch(img); matches != nil {
@@ -57,13 +56,12 @@ func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface, err
 				continue
 			}
 			if reg.AliCloud.Region == region {
-				ri = reg
-				break
+				return reg, nil
 			}
 		}
 	}
 	// may be public image
-	return
+	return &PublicRegistry{}, nil
 }
 
 func NewResolver(configPath string) (*Resolver, error) {
