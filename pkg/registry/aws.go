@@ -110,6 +110,37 @@ func (r *AWSRegistry) GetAuthToken() (string, error) {
 	return toRegistryAuth(parts[0], parts[1])
 }
 
+func (r *AWSRegistry) GetLatestTag(repo string) (tag string, err error) {
+	var sess *session.Session
+	sess, err = newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
+	if err != nil {
+		return
+	}
+
+	ecrSvc := ecr.New(sess)
+	input := &ecr.DescribeImagesInput{
+		RepositoryName: &repo,
+	}
+	var output *ecr.DescribeImagesOutput
+	output, err = ecrSvc.DescribeImages(input)
+	if err != nil {
+		return
+	}
+	if len(output.ImageDetails) == 0 {
+		err = fmt.Errorf("repo has no image")
+		return
+	}
+
+	detail := output.ImageDetails[len(output.ImageDetails)-1]
+	if len(detail.ImageTags) == 0 {
+		err = fmt.Errorf("image has no tag")
+		return
+	}
+
+	tag = *detail.ImageTags[0]
+	return
+}
+
 func (r *AWSRegistry) Verify() error {
 	tocheck := []struct {
 		name, value string

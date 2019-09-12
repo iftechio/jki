@@ -38,7 +38,7 @@ func (r *Resolver) ResolveName(name string) (regKind string, registry *Registry,
 	}
 }
 
-func (r *Resolver) ResolveRegistryAuth(img string) (authToken string, err error) {
+func (r *Resolver) ResolveRegistryByImage(img string) (ri RegistryInterface,err error){
 	if matches := reAWSECR.FindStringSubmatch(img); matches != nil {
 		region := matches[1]
 		for _, reg := range r.registries {
@@ -46,7 +46,8 @@ func (r *Resolver) ResolveRegistryAuth(img string) (authToken string, err error)
 				continue
 			}
 			if reg.AWS.Region == region {
-				return reg.AWS.GetAuthToken()
+				ri = reg
+				break
 			}
 		}
 	} else if matches := reAliCloud.FindStringSubmatch(img); matches != nil {
@@ -56,12 +57,13 @@ func (r *Resolver) ResolveRegistryAuth(img string) (authToken string, err error)
 				continue
 			}
 			if reg.AliCloud.Region == region {
-				return reg.AliCloud.GetAuthToken()
+				ri = reg
+				break
 			}
 		}
 	}
 	// may be public image
-	return "", nil
+	return
 }
 
 func NewResolver(configPath string) (*Resolver, error) {
