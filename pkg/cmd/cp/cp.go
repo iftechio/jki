@@ -125,7 +125,7 @@ func (o *CopyOptions) Run(args []string) error {
 	}
 
 	if !o.saveImage {
-		o.removeImage(ctx, frImg, toImg)
+		o.removeImages(ctx, frImg, toImg)
 	}
 
 	fmt.Println("Done!")
@@ -153,7 +153,7 @@ func NewCmdCp(f cmdutils.Factory) *cobra.Command {
 	return cmd
 }
 
-func (o *CopyOptions) removeImage(ctx context.Context, imageNames ...string) {
+func (o *CopyOptions) removeImages(ctx context.Context, imageNames ...string) {
 	for _, name := range imageNames {
 		if _, err := o.dockerClient.ImageRemove(ctx, name, types.ImageRemoveOptions{}); err != nil {
 			fmt.Printf("an error appears in removing image, err: %v\n", err)
