@@ -153,10 +153,10 @@ func NewCmdCp(f cmdutils.Factory) *cobra.Command {
 	return cmd
 }
 
-func (o *CopyOptions) removeImage(ctx context.Context, imageNames ...string) (err error) {
+func (o *CopyOptions) removeImage(ctx context.Context, imageNames ...string) {
 	for _, name := range imageNames {
-		if _, err = o.dockerClient.ImageRemove(ctx, name, types.ImageRemoveOptions{}); err != nil {
-			return
+		if _, err := o.dockerClient.ImageRemove(ctx, name, types.ImageRemoveOptions{}); err != nil {
+			fmt.Printf("an error appears in removing image, err: %v\n", err)
 		}
 	}
 	return
