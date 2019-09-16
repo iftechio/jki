@@ -39,7 +39,8 @@ default-registry: ali
 registries:
 - name: ali
   aliyun:
-	# 这里的用户名、密码请用子账号访问 https://cr.console.aliyun.com/cn-hangzhou/instances/credentials 获取
+    # 如果使用 access key 的话这里就不用设置
+    # 用户名、密码请用子账号访问 https://cr.console.aliyun.com/cn-hangzhou/instances/credentials 获取
     #username: user
     #password: passwd
 
