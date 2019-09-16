@@ -1,7 +1,7 @@
-package utils
+package factory
 
 import (
-	"github.com/bario/jki/pkg/cmd/configflags"
+	"github.com/bario/jki/pkg/configflags"
 	"github.com/bario/jki/pkg/registry"
 
 	"github.com/docker/docker/client"
@@ -34,6 +34,6 @@ func (f *factoryImpl) KubeClient() (*kubernetes.Clientset, error) {
 	return f.configFlags.KubeClient()
 }
 
-func NewFactory(cflags *configflags.ConfigFlags) Factory {
+func New(cflags *configflags.ConfigFlags) Factory {
 	return &factoryImpl{cflags}
 }

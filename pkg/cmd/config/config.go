@@ -10,11 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 	"github.com/bario/jki/pkg/registry"
 )
 
-func NewCmdConfig(f cmdutils.Factory) *cobra.Command {
+func NewCmdConfig(f factory.Factory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "Modify config file",

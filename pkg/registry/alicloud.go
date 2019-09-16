@@ -22,7 +22,7 @@ func (r *AliCloudRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
 }
 
-func (r *AliCloudRegistry) Domain() string {
+func (r *AliCloudRegistry) Prefix() string {
 	return fmt.Sprintf("registry.%s.aliyuncs.com/%s", r.Region, r.Namespace)
 }
 

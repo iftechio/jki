@@ -79,7 +79,7 @@ func (r *AWSRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
 }
 
-func (r *AWSRegistry) Domain() string {
+func (r *AWSRegistry) Prefix() string {
 	domain := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", r.AccountID, r.Region)
 	if strings.HasPrefix(r.Region, "cn-") {
 		return domain + ".cn"

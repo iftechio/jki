@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ type versionInfo struct {
 	Platform  string
 }
 
-func NewCmdVersion(f cmdutils.Factory) *cobra.Command {
+func NewCmdVersion(f factory.Factory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print the version",

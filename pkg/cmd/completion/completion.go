@@ -3,12 +3,12 @@ package completion
 import (
 	"os"
 
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 
 	"github.com/spf13/cobra"
 )
 
-func NewCmdCompletion(f cmdutils.Factory) *cobra.Command {
+func NewCmdCompletion(f factory.Factory) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "completion",
 		Short: "Output shell completion code for the specified shell (bash or zsh).",

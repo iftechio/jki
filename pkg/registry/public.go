@@ -1,6 +1,6 @@
 package registry
 
-// PublicRegistry for like docker hub
+// PublicRegistry represents registries which does not need authentication.
 type PublicRegistry struct {
 }
 
@@ -10,7 +10,7 @@ func (p *PublicRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
 }
 
-func (p *PublicRegistry) Domain() string {
+func (p *PublicRegistry) Prefix() string {
 	return ""
 }
 

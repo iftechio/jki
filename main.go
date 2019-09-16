@@ -6,19 +6,19 @@ import (
 	"github.com/bario/jki/pkg/cmd/build"
 	"github.com/bario/jki/pkg/cmd/completion"
 	"github.com/bario/jki/pkg/cmd/config"
-	"github.com/bario/jki/pkg/cmd/configflags"
 	"github.com/bario/jki/pkg/cmd/cp"
 	"github.com/bario/jki/pkg/cmd/transferimage"
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
 	"github.com/bario/jki/pkg/cmd/version"
+	"github.com/bario/jki/pkg/configflags"
+	"github.com/bario/jki/pkg/factory"
 	"github.com/spf13/cobra"
 )
 
-type Commander func(cmdutils.Factory) *cobra.Command
+type Commander func(factory.Factory) *cobra.Command
 
 func main() {
 	cf := configflags.New()
-	factory := cmdutils.NewFactory(cf)
+	factory := factory.New(cf)
 
 	rootCmd := cobra.Command{
 		Use: "jki",

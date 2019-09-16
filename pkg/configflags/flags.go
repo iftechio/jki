@@ -2,11 +2,10 @@ package configflags
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/bario/jki/pkg/registry"
+	"github.com/bario/jki/pkg/utils"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -46,10 +45,10 @@ func (f *ConfigFlags) KubeClient() (*kubernetes.Clientset, error) {
 }
 
 func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
-	homedir := os.Getenv("HOME")
-	flags.StringVar(&f.configPath, "jkiconfig", path.Join(homedir, ".jki.yaml"), "Config path")
+	homedir := utils.HomeDir()
+	flags.StringVar(&f.configPath, "jkiconfig", filepath.Join(homedir, ".jki.yaml"), "Config path")
 	flags.StringVarP(&f.registry, "registry", "r", "", "The desired registry. If not set, use the `default-registry` in config.")
-	flags.StringVarP(&f.kubeconfig, "kubconfig", "", filepath.Join(homedir, ".kube", "config"), "The path to kubeconfig. If not set `~/.kube/config` will be used")
+	flags.StringVarP(&f.kubeconfig, "kubeconfig", "", filepath.Join(homedir, ".kube", "config"), "The path to kubeconfig. If not set `~/.kube/config` will be used")
 }
 
 func New() *ConfigFlags {

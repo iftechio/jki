@@ -42,8 +42,8 @@ func (r *Registry) registryInterface() RegistryInterface {
 	panic(errUnknownRegistry)
 }
 
-func (r *Registry) Domain() string {
-	return r.registryInterface().Domain()
+func (r *Registry) Prefix() string {
+	return r.registryInterface().Prefix()
 }
 
 func (r *Registry) GetAuthToken() (string, error) {

@@ -10,9 +10,10 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 	"github.com/bario/jki/pkg/image"
 	"github.com/bario/jki/pkg/registry"
+	"github.com/bario/jki/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +24,7 @@ type CopyOptions struct {
 	saveImage    bool
 }
 
-func (o *CopyOptions) Complete(f cmdutils.Factory, cmd *cobra.Command, args []string) error {
+func (o *CopyOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
 	var err error
 	o.resolver, err = f.ToResolver()
 	if err != nil {
@@ -103,7 +104,7 @@ func (o *CopyOptions) Run(args []string) error {
 		return err
 	}
 
-	img.Domain = toReg.Domain()
+	img.Domain = toReg.Prefix()
 	toImg := img.String()
 	_ = o.dockerClient.ImageTag(ctx, frImg, toImg)
 
@@ -136,15 +137,15 @@ func NewCopyOptions() *CopyOptions {
 	return &CopyOptions{}
 }
 
-func NewCmdCp(f cmdutils.Factory) *cobra.Command {
+func NewCmdCp(f factory.Factory) *cobra.Command {
 	o := NewCopyOptions()
 	cmd := &cobra.Command{
 		Use:   "cp <IMAGE> [REGISTRY NAME]",
 		Short: "Copy images from one registry to another",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdutils.CheckError(o.Complete(f, cmd, args))
-			cmdutils.CheckError(o.Validate(args))
-			cmdutils.CheckError(o.Run(args))
+			utils.CheckError(o.Complete(f, cmd, args))
+			utils.CheckError(o.Validate(args))
+			utils.CheckError(o.Run(args))
 		},
 	}
 

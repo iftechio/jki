@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	"github.com/bario/jki/pkg/cmd/cp"
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 	"github.com/bario/jki/pkg/image"
 	"github.com/bario/jki/pkg/registry"
+	"github.com/bario/jki/pkg/utils"
 	"github.com/spf13/cobra"
 
 	apiv1 "k8s.io/api/core/v1"
@@ -38,7 +39,7 @@ type transferImageOptions struct {
 	dstRegistry *registry.Registry
 }
 
-func (o *transferImageOptions) Complete(f cmdutils.Factory) error {
+func (o *transferImageOptions) Complete(f factory.Factory) error {
 	o.cp = cp.NewCopyOptions()
 	dstReg, registries, err := f.LoadRegistries()
 	if err != nil {
@@ -137,7 +138,7 @@ func (o *transferImageOptions) Run() (err error) {
 				if err != nil {
 					return err
 				}
-				o.fixPodSpec(&deploy.Spec.Template, it, o.dstRegistry.Domain())
+				o.fixPodSpec(&deploy.Spec.Template, it, o.dstRegistry.Prefix())
 				_, err = deploymentClient.Update(deploy)
 				if err != nil {
 					return err
@@ -147,7 +148,7 @@ func (o *transferImageOptions) Run() (err error) {
 				if err != nil {
 					return err
 				}
-				o.fixPodSpec(&ds.Spec.Template, it, o.dstRegistry.Domain())
+				o.fixPodSpec(&ds.Spec.Template, it, o.dstRegistry.Prefix())
 				_, err = dsClient.Update(ds)
 				if err != nil {
 					return err
@@ -157,7 +158,7 @@ func (o *transferImageOptions) Run() (err error) {
 				if err != nil {
 					return err
 				}
-				o.fixPodSpec(&sts.Spec.Template, it, o.dstRegistry.Domain())
+				o.fixPodSpec(&sts.Spec.Template, it, o.dstRegistry.Prefix())
 				_, err = stsClient.Update(sts)
 				if err != nil {
 					return err
@@ -169,14 +170,14 @@ func (o *transferImageOptions) Run() (err error) {
 }
 
 // NewCmdTransferImage create fix image command
-func NewCmdTransferImage(f cmdutils.Factory) *cobra.Command {
+func NewCmdTransferImage(f factory.Factory) *cobra.Command {
 	o := newTransferImageOptions()
 	cmd := &cobra.Command{
 		Use:   "transferimage",
 		Short: "Auto cp images to an accessable registry and modify deployment image",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdutils.CheckError(o.Complete(f))
-			cmdutils.CheckError(o.Run())
+			utils.CheckError(o.Complete(f))
+			utils.CheckError(o.Run())
 		},
 	}
 	flags := cmd.Flags()

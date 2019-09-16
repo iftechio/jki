@@ -15,9 +15,10 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	cmdutils "github.com/bario/jki/pkg/cmd/utils"
+	"github.com/bario/jki/pkg/factory"
 	"github.com/bario/jki/pkg/git"
 	"github.com/bario/jki/pkg/registry"
+	"github.com/bario/jki/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -72,7 +73,7 @@ func NewBuildOptions() *BuildOptions {
 	return &BuildOptions{}
 }
 
-func (o *BuildOptions) Complete(f cmdutils.Factory, cmd *cobra.Command, args []string) error {
+func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
 	if len(args) > 1 {
 		o.context = args[0]
 	}
@@ -127,7 +128,7 @@ func (o *BuildOptions) Run() error {
 
 	ctx := context.TODO()
 
-	domain := o.registry.Domain()
+	domain := o.registry.Prefix()
 	repoWithTag := fmt.Sprintf("%s:%s", o.imageName, tag)
 	image := fmt.Sprintf("%s/%s", domain, repoWithTag)
 	buildOpts := types.ImageBuildOptions{
@@ -136,7 +137,7 @@ func (o *BuildOptions) Run() error {
 		Dockerfile: o.dockerFileName,
 	}
 
-	ignores, err := cmdutils.ReadDockerIgnore(o.context)
+	ignores, err := utils.ReadDockerIgnore(o.context)
 	if err != nil {
 		return err
 	}
@@ -195,15 +196,15 @@ func (o *BuildOptions) Run() error {
 	return nil
 }
 
-func NewCmdBuild(f cmdutils.Factory) *cobra.Command {
+func NewCmdBuild(f factory.Factory) *cobra.Command {
 	o := NewBuildOptions()
 	cmd := &cobra.Command{
 		Use:   "build [PATH]",
 		Short: "Build docker image",
 		Run: func(cmd *cobra.Command, args []string) {
-			cmdutils.CheckError(o.Complete(f, cmd, args))
-			cmdutils.CheckError(o.Validate(args))
-			cmdutils.CheckError(o.Run())
+			utils.CheckError(o.Complete(f, cmd, args))
+			utils.CheckError(o.Validate(args))
+			utils.CheckError(o.Run())
 		},
 	}
 
