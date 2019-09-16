@@ -1,4 +1,5 @@
 # jki - JiKe Image utils
+[![Build Status](https://travis-ci.org/bario/jki.svg?branch=master)](https://travis-ci.org/bario/jki)
 
 ## 1. 安装
 
@@ -38,6 +39,10 @@ default-registry: ali
 registries:
 - name: ali
   aliyun:
+	# 这里的用户名、密码请用子账号访问 https://cr.console.aliyun.com/cn-hangzhou/instances/credentials 获取
+    #username: user
+    #password: passwd
+
     # 使用子账号登录后访问 https://usercenter.console.aliyun.com/#/manage/ak 创建自己的 access key
     access_key: <YOUR ACCESS KEY ID>
     secret_access_key: <YOUR ACCESS KEY SECRET>
@@ -108,6 +113,13 @@ $ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 ```
 
 会把 `k8s.gcr.io/etcd:3.3.10` 该镜像复制到 `aws-tokyo` 对应的 registry 上
+
+自动复制最新的 tag (仅限于 AWS ECR 跟阿里云容器镜像服务):
+```
+$ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo
+```
+
+会查询 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo` 该 image 最新的 tag, 然后复制到 `ali` 对应的 registry
 
 ### 2.4. 自动替换修复 deployment 不能访问的镜像
 
