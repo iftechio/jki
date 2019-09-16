@@ -9,6 +9,7 @@ import (
 	"path"
 	"runtime"
 	"strings"
+	"unicode"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -85,6 +86,10 @@ func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []st
 	defReg, registries, err := f.LoadRegistries()
 	if err != nil {
 		return err
+	}
+	if strings.IndexFunc(o.imageName, unicode.IsUpper) != -1 {
+		o.imageName = strings.ToLower(o.imageName)
+		fmt.Printf("WARNING: uppercase char is not allowed in image name, changed to `%s`\n", o.imageName)
 	}
 	o.registry = registries[defReg]
 	return nil
