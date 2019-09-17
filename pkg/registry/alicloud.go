@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cr"
+	"github.com/docker/docker/api/types"
 )
 
 type AliCloudRegistry struct {
@@ -27,34 +28,11 @@ func (r *AliCloudRegistry) Prefix() string {
 }
 
 func (r *AliCloudRegistry) GetAuthToken() (string, error) {
-	if len(r.Username) != 0 && len(r.Password) != 0 {
-		return toRegistryAuth(r.Username, r.Password)
+	auth, err := r.GetAuthConfig()
+	if err != nil {
+		return "", err
 	}
-	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {
-		type GetAuthTokenResponse struct {
-			Data struct {
-				AuthorizationToken string `json:"authorizationToken"`
-				UserName           string `json:"tempUserName"`
-			} `json:"data"`
-		}
-		client, err := cr.NewClientWithAccessKey(r.Region, r.AccessKey, r.SecretAccessKey)
-		if err != nil {
-			return "", fmt.Errorf("create cr client: %s", err)
-		}
-		req := cr.CreateGetAuthorizationTokenRequest()
-		req.Domain = fmt.Sprintf("cr.%s.aliyuncs.com", r.Region)
-		rawResp, err := client.GetAuthorizationToken(req)
-		if err != nil {
-			return "", fmt.Errorf("get token: %s", err)
-		}
-		var resp GetAuthTokenResponse
-		err = json.Unmarshal(rawResp.GetHttpContentBytes(), &resp)
-		if err != nil {
-			return "", err
-		}
-		return toRegistryAuth(resp.Data.UserName, resp.Data.AuthorizationToken)
-	}
-	return "", fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
+	return toRegistryAuth(auth.Username, auth.Password)
 }
 
 func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
@@ -62,7 +40,7 @@ func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
 	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {
 		client, err = cr.NewClientWithAccessKey(r.Region, r.AccessKey, r.SecretAccessKey)
 	} else {
-		err = fmt.Errorf("dont support username and password, please use access_key!")
+		err = fmt.Errorf("dont support username and password")
 	}
 	if err != nil {
 		err = fmt.Errorf("create cr client: %s", err)
@@ -112,6 +90,10 @@ func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
 }
 
 func (r *AliCloudRegistry) Verify() error {
+	isNotEmpty := func(s string) bool {
+		return len(s) != 0
+	}
+
 	tocheck := []struct {
 		name, value string
 	}{
@@ -125,16 +107,48 @@ func (r *AliCloudRegistry) Verify() error {
 		},
 	}
 	for _, c := range tocheck {
-		if len(c.value) == 0 {
+		if !isNotEmpty(c.value) {
 			return fmt.Errorf("%s cannot be empty", c.name)
 		}
 	}
-	isNotEmpty := func(s string) bool {
-		return len(s) != 0
-	}
+
 	if !((isNotEmpty(r.Username) && isNotEmpty(r.Password)) || (isNotEmpty(r.AccessKey) && isNotEmpty(r.SecretAccessKey))) {
 		return fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
 	}
 
 	return nil
+}
+
+func (r *AliCloudRegistry) GetAuthConfig() (auth types.AuthConfig, err error) {
+	auth.ServerAddress = fmt.Sprintf("registry.%s.aliyuncs.com", r.Region)
+	if len(r.Username) != 0 && len(r.Password) != 0 {
+		auth.Username, auth.Password = r.Username, r.Password
+		return auth, nil
+	}
+	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {
+		type GetAuthTokenResponse struct {
+			Data struct {
+				AuthorizationToken string `json:"authorizationToken"`
+				UserName           string `json:"tempUserName"`
+			} `json:"data"`
+		}
+		client, err := cr.NewClientWithAccessKey(r.Region, r.AccessKey, r.SecretAccessKey)
+		if err != nil {
+			return auth, fmt.Errorf("create cr client: %s", err)
+		}
+		req := cr.CreateGetAuthorizationTokenRequest()
+		req.Domain = fmt.Sprintf("cr.%s.aliyuncs.com", r.Region)
+		rawResp, err := client.GetAuthorizationToken(req)
+		if err != nil {
+			return auth, fmt.Errorf("get token: %s", err)
+		}
+		var resp GetAuthTokenResponse
+		err = json.Unmarshal(rawResp.GetHttpContentBytes(), &resp)
+		if err != nil {
+			return auth, err
+		}
+		auth.Username, auth.Password = resp.Data.UserName, resp.Data.AuthorizationToken
+		return auth, nil
+	}
+	return auth, fmt.Errorf("neither username and password nor access_key and secret_access_key are specified")
 }

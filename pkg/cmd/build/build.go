@@ -66,7 +66,8 @@ type BuildOptions struct {
 	dockerFileName string
 	imageName      string
 	tagName        string
-	registry       *registry.Registry
+	dstRegistry    *registry.Registry
+	allRegistries  map[string]*registry.Registry
 	dockerClient   *client.Client
 }
 
@@ -91,7 +92,8 @@ func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []st
 		o.imageName = strings.ToLower(o.imageName)
 		fmt.Printf("WARNING: uppercase char is not allowed in image name, changed to `%s`\n", o.imageName)
 	}
-	o.registry = registries[defReg]
+	o.dstRegistry = registries[defReg]
+	o.allRegistries = registries
 	return nil
 }
 
@@ -133,13 +135,22 @@ func (o *BuildOptions) Run() error {
 
 	ctx := context.TODO()
 
-	domain := o.registry.Prefix()
 	repoWithTag := fmt.Sprintf("%s:%s", o.imageName, tag)
-	image := fmt.Sprintf("%s/%s", domain, repoWithTag)
+	image := fmt.Sprintf("%s/%s", o.dstRegistry.Prefix(), repoWithTag)
+
+	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
+	for name, reg := range o.allRegistries {
+		authCfg, err := reg.GetAuthConfig()
+		if err != nil {
+			return fmt.Errorf("get authconfig of %s: %s", name, err)
+		}
+		authConfigs[authCfg.ServerAddress] = authCfg
+	}
 	buildOpts := types.ImageBuildOptions{
-		Tags:       []string{image},
-		Remove:     true,
-		Dockerfile: o.dockerFileName,
+		Tags:        []string{image},
+		Remove:      true,
+		Dockerfile:  o.dockerFileName,
+		AuthConfigs: authConfigs,
 	}
 
 	ignores, err := utils.ReadDockerIgnore(o.context)
@@ -169,12 +180,12 @@ func (o *BuildOptions) Run() error {
 	}
 	printInfo("镜像构建成功")
 
-	err = o.registry.CreateRepoIfNotExists(o.imageName)
+	err = o.dstRegistry.CreateRepoIfNotExists(o.imageName)
 	if err != nil {
 		return err
 	}
 
-	authToken, err := o.registry.GetAuthToken()
+	authToken, err := o.dstRegistry.GetAuthToken()
 	if err != nil {
 		return err
 	}

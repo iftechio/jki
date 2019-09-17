@@ -61,3 +61,7 @@ func (r *Registry) GetLatestTag(repo string) (string, error) {
 func (r *Registry) Verify() error {
 	return r.registryInterface().Verify()
 }
+
+func (r *Registry) GetAuthConfig() (types.AuthConfig, error) {
+	return r.registryInterface().GetAuthConfig()
+}

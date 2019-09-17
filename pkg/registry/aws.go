@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/docker/docker/api/types"
 )
 
 type AWSRegistry struct {
@@ -88,27 +89,11 @@ func (r *AWSRegistry) Prefix() string {
 }
 
 func (r *AWSRegistry) GetAuthToken() (string, error) {
-	sess, err := newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
+	auth, err := r.GetAuthConfig()
 	if err != nil {
 		return "", err
 	}
-
-	ecrSvc := ecr.New(sess)
-	output, err := ecrSvc.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{})
-	if err != nil {
-		return "", err
-	}
-	if len(output.AuthorizationData) < 1 {
-		return "", fmt.Errorf("missing token")
-	}
-	token := output.AuthorizationData[0]
-	encodedToken := aws.StringValue(token.AuthorizationToken)
-	data, err := base64.StdEncoding.DecodeString(encodedToken)
-	if err != nil {
-		return "", fmt.Errorf("decode ecr token: %s", err)
-	}
-	parts := strings.Split(string(data), ":")
-	return toRegistryAuth(parts[0], parts[1])
+	return toRegistryAuth(auth.Username, auth.Password)
 }
 
 func (r *AWSRegistry) GetLatestTag(repo string) (tag string, err error) {
@@ -173,4 +158,35 @@ func (r *AWSRegistry) Verify() error {
 		}
 	}
 	return nil
+}
+
+func (r *AWSRegistry) GetAuthConfig() (auth types.AuthConfig, err error) {
+	sess, err := newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
+	if err != nil {
+		return
+	}
+
+	ecrSvc := ecr.New(sess)
+	output, err := ecrSvc.GetAuthorizationToken(&ecr.GetAuthorizationTokenInput{})
+	if err != nil {
+		return
+	}
+	if len(output.AuthorizationData) < 1 {
+		return auth, fmt.Errorf("missing token from ecr")
+	}
+
+	token := output.AuthorizationData[0]
+	encodedToken := aws.StringValue(token.AuthorizationToken)
+	data, err := base64.StdEncoding.DecodeString(encodedToken)
+	if err != nil {
+		return auth, fmt.Errorf("decode ecr token: %s", err)
+	}
+	parts := strings.Split(string(data), ":")
+	addr := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", r.AccountID, r.Region)
+	if strings.HasPrefix(r.Region, "cn") {
+		addr += ".cn"
+	}
+	auth.Username, auth.Password = parts[0], parts[1]
+	auth.ServerAddress = addr
+	return auth, nil
 }
