@@ -139,12 +139,25 @@ func (o *BuildOptions) Run() error {
 	image := fmt.Sprintf("%s/%s", o.dstRegistry.Prefix(), repoWithTag)
 
 	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
-	for name, reg := range o.allRegistries {
-		authCfg, err := reg.GetAuthConfig()
-		if err != nil {
-			return fmt.Errorf("get authconfig of %s: %s", name, err)
+	dkfile, err := os.Open(o.dockerFileName)
+	if err != nil {
+		return err
+	}
+	defer dkfile.Close()
+	baseImages, err := utils.ExtractBaseImages(dkfile)
+	if err != nil {
+		return err
+	}
+	for _, baseImage := range baseImages {
+		for name, reg := range o.allRegistries {
+			if strings.HasPrefix(baseImage, reg.Prefix()) {
+				authCfg, err := reg.GetAuthConfig()
+				if err != nil {
+					return fmt.Errorf("get authconfig of %s: %s", name, err)
+				}
+				authConfigs[authCfg.ServerAddress] = authCfg
+			}
 		}
-		authConfigs[authCfg.ServerAddress] = authCfg
 	}
 	buildOpts := types.ImageBuildOptions{
 		Tags:        []string{image},
