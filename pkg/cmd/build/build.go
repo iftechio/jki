@@ -149,6 +149,7 @@ func (o *BuildOptions) Run() error {
 		return err
 	}
 	for _, baseImage := range baseImages {
+		// TODO(knight42): skip registries that already got AuthConfig
 		for name, reg := range o.allRegistries {
 			if strings.HasPrefix(baseImage, reg.Prefix()) {
 				authCfg, err := reg.GetAuthConfig()
@@ -247,6 +248,6 @@ func NewCmdBuild(f factory.Factory) *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&o.dockerFileName, "file", "f", "Dockerfile", "Name of the Dockerfile")
 	flags.StringVar(&o.imageName, "image-name", path.Base(wd), "Custom image name")
-	flags.StringVar(&o.tagName, "tag-name", "", "Custom tag name")
+	flags.StringVarP(&o.tagName, "tag-name", "t", "", "Custom tag name")
 	return cmd
 }
