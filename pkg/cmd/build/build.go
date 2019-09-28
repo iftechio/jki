@@ -148,15 +148,19 @@ func (o *BuildOptions) Run() error {
 	if err != nil {
 		return err
 	}
+	mem := make(map[string]struct{}, len(o.allRegistries))
 	for _, baseImage := range baseImages {
-		// TODO(knight42): skip registries that already got AuthConfig
 		for name, reg := range o.allRegistries {
+			if _, ok := mem[name]; ok {
+				continue
+			}
 			if strings.HasPrefix(baseImage, reg.Prefix()) {
 				authCfg, err := reg.GetAuthConfig()
 				if err != nil {
 					return fmt.Errorf("get authconfig of %s: %s", name, err)
 				}
 				authConfigs[authCfg.ServerAddress] = authCfg
+				mem[name] = struct{}{}
 			}
 		}
 	}
