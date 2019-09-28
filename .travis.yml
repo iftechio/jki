@@ -28,4 +28,4 @@ deploy:
     condition: $TRAVIS_GO_VERSION = master
     tags: true
     branch: master
-    repo: bario/jki
+    repo: iftechio/jki

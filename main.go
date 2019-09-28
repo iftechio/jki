@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"github.com/bario/jki/pkg/cmd/build"
-	"github.com/bario/jki/pkg/cmd/completion"
-	"github.com/bario/jki/pkg/cmd/config"
-	"github.com/bario/jki/pkg/cmd/cp"
-	"github.com/bario/jki/pkg/cmd/transferimage"
-	"github.com/bario/jki/pkg/cmd/version"
-	"github.com/bario/jki/pkg/configflags"
-	"github.com/bario/jki/pkg/factory"
+	"github.com/iftechio/jki/pkg/cmd/build"
+	"github.com/iftechio/jki/pkg/cmd/completion"
+	"github.com/iftechio/jki/pkg/cmd/config"
+	"github.com/iftechio/jki/pkg/cmd/cp"
+	"github.com/iftechio/jki/pkg/cmd/transferimage"
+	"github.com/iftechio/jki/pkg/cmd/version"
+	"github.com/iftechio/jki/pkg/configflags"
+	"github.com/iftechio/jki/pkg/factory"
 	"github.com/spf13/cobra"
 )
 

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/bario/jki/pkg/configflags"
-	"github.com/bario/jki/pkg/registry"
+	"github.com/iftechio/jki/pkg/configflags"
+	"github.com/iftechio/jki/pkg/registry"
 
 	"github.com/docker/docker/client"
 	"k8s.io/client-go/kubernetes"

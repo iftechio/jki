@@ -16,10 +16,10 @@ import (
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"github.com/bario/jki/pkg/factory"
-	"github.com/bario/jki/pkg/git"
-	"github.com/bario/jki/pkg/registry"
-	"github.com/bario/jki/pkg/utils"
+	"github.com/iftechio/jki/pkg/factory"
+	"github.com/iftechio/jki/pkg/git"
+	"github.com/iftechio/jki/pkg/registry"
+	"github.com/iftechio/jki/pkg/utils"
 	"github.com/spf13/cobra"
 )
 

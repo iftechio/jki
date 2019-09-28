@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/bario/jki/pkg/registry"
-	"github.com/bario/jki/pkg/utils"
+	"github.com/iftechio/jki/pkg/registry"
+	"github.com/iftechio/jki/pkg/utils"
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"

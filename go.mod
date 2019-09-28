@@ -1,4 +1,4 @@
-module github.com/bario/jki
+module github.com/iftechio/jki
 
 go 1.12
 

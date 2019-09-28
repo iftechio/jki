@@ -10,8 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/bario/jki/pkg/factory"
-	"github.com/bario/jki/pkg/registry"
+	"github.com/iftechio/jki/pkg/factory"
+	"github.com/iftechio/jki/pkg/registry"
 )
 
 func NewCmdConfig(f factory.Factory) *cobra.Command {

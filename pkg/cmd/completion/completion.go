@@ -3,7 +3,7 @@ package completion
 import (
 	"os"
 
-	"github.com/bario/jki/pkg/factory"
+	"github.com/iftechio/jki/pkg/factory"
 
 	"github.com/spf13/cobra"
 )

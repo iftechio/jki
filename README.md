@@ -1,16 +1,16 @@
 # jki - JiKe Image utils
-[![Build Status](https://travis-ci.org/bario/jki.svg?branch=master)](https://travis-ci.org/bario/jki)
+[![Build Status](https://travis-ci.org/iftechio/jki.svg?branch=master)](https://travis-ci.org/iftechio/jki)
 
 ## 1. 安装
 
-请到 https://github.com/bario/jki/releases 页面下载
+请到 https://github.com/iftechio/jki/releases 页面下载
 
 下载后赋予可执行权限, 然后复制到 `PATH` 中, 比如:
 
 ```
 VERSION=0.0.7
 OS=darwin
-wget "https://github.com/bario/jki/releases/download/v$VERSION/jki_${VERSION}_${OS}_amd64.tar.gz"
+wget "https://github.com/iftechio/jki/releases/download/v$VERSION/jki_${VERSION}_${OS}_amd64.tar.gz"
 tar xf jki_${VERSION}_${OS}_amd64.tar.gz
 cp jki_${VERSION}_${OS}_amd64/jki /usr/local/bin/
 ```

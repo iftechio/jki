@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bario/jki/pkg/cmd/cp"
-	"github.com/bario/jki/pkg/factory"
-	"github.com/bario/jki/pkg/image"
-	"github.com/bario/jki/pkg/registry"
-	"github.com/bario/jki/pkg/utils"
+	"github.com/iftechio/jki/pkg/cmd/cp"
+	"github.com/iftechio/jki/pkg/factory"
+	"github.com/iftechio/jki/pkg/image"
+	"github.com/iftechio/jki/pkg/registry"
+	"github.com/iftechio/jki/pkg/utils"
 	"github.com/spf13/cobra"
 
 	apiv1 "k8s.io/api/core/v1"
