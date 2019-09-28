@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	errUnknownRegistry = fmt.Errorf("unknown registry")
+	ErrUnknownRegistry = fmt.Errorf("unknown registry")
 )
 
 func toRegistryAuth(user, passwd string) (string, error) {
@@ -25,43 +25,57 @@ func toRegistryAuth(user, passwd string) (string, error) {
 }
 
 type Registry struct {
-	Name     string            `json:"name" yaml:"name"`
-	AliCloud *AliCloudRegistry `json:"aliyun" yaml:"aliyun"`
-	AWS      *AWSRegistry      `json:"aws" yaml:"aws"`
+	Name      string             `json:"name" yaml:"name"`
+	AliCloud  *AliCloudRegistry  `json:"aliyun" yaml:"aliyun"`
+	AWS       *AWSRegistry       `json:"aws" yaml:"aws"`
+	DockerHub *DockerHubRegistry `json:"dockerhub" yaml:"dockerhub"`
 }
 
-var _ RegistryInterface = &Registry{}
+var _ RegistryInterface = (*Registry)(nil)
 
-func (r *Registry) registryInterface() RegistryInterface {
-	if r.AliCloud != nil {
+var publicReg = &PublicRegistry{}
+
+func (r *Registry) delegate() innerRegistryInterface {
+	switch {
+	case r.AliCloud != nil:
 		return r.AliCloud
-	}
-	if r.AWS != nil {
+	case r.AWS != nil:
 		return r.AWS
+	case r.DockerHub != nil:
+		return r.DockerHub
+	default:
+		return publicReg
 	}
-	panic(errUnknownRegistry)
 }
 
 func (r *Registry) Prefix() string {
-	return r.registryInterface().Prefix()
+	return r.delegate().Prefix()
 }
 
 func (r *Registry) GetAuthToken() (string, error) {
-	return r.registryInterface().GetAuthToken()
+	auth, err := r.GetAuthConfig()
+	if err != nil {
+		return "", err
+	}
+	return toRegistryAuth(auth.Username, auth.Password)
 }
 
 func (r *Registry) CreateRepoIfNotExists(repo string) error {
-	return r.registryInterface().CreateRepoIfNotExists(repo)
+	return r.delegate().CreateRepoIfNotExists(repo)
 }
 
 func (r *Registry) GetLatestTag(repo string) (string, error) {
-	return r.registryInterface().GetLatestTag(repo)
+	return r.delegate().GetLatestTag(repo)
 }
 
 func (r *Registry) Verify() error {
-	return r.registryInterface().Verify()
+	ri := r.delegate()
+	if _, ok := ri.(*PublicRegistry); ok {
+		return ErrUnknownRegistry
+	}
+	return r.delegate().Verify()
 }
 
 func (r *Registry) GetAuthConfig() (types.AuthConfig, error) {
-	return r.registryInterface().GetAuthConfig()
+	return r.delegate().GetAuthConfig()
 }

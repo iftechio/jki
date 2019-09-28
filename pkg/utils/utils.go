@@ -16,7 +16,11 @@ func CheckError(err error) {
 }
 
 func HomeDir() string {
-	return os.Getenv("HOME")
+	h, err := os.UserHomeDir()
+	if err != nil {
+		h = "/"
+	}
+	return h
 }
 
 func ExtractBaseImages(input io.Reader) ([]string, error) {

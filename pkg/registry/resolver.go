@@ -1,20 +1,12 @@
 package registry
 
 import (
-	"fmt"
 	"regexp"
 )
 
 var (
-	reAWSECR   = regexp.MustCompile(`\d+\.dkr\.ecr\.(?P<Region>[\w-]+)\.amazonaws\.com`)
+	reAWSECR   = regexp.MustCompile(`(?P<AccountID>\d+)\.dkr\.ecr\.(?P<Region>[\w-]+)\.amazonaws\.com`)
 	reAliCloud = regexp.MustCompile(`registry\.(?P<Region>[\w-]+)\.aliyuncs.com`)
-	// reAliCloudVpc      = regexp.MustCompile(`registry-vpc\.[\w-]+\.aliyuncs.com`)
-	// reAliCloudInternal = regexp.MustCompile(`registry-internal\.[\w-]+\.aliyuncs.com`)
-)
-
-const (
-	RegistryAWS      = "AWS"
-	RegistryAliCloud = "AliCloud"
 )
 
 type Resolver struct {
@@ -22,30 +14,15 @@ type Resolver struct {
 	defaultRegistry string
 }
 
-func (r *Resolver) ResolveName(name string) (regKind string, registry *Registry, err error) {
-	reg, exist := r.registries[name]
-	if !exist {
-		return "", nil, fmt.Errorf("not found: %s", name)
-	}
-
-	switch {
-	case reg.AliCloud != nil:
-		return RegistryAliCloud, reg, nil
-	case reg.AWS != nil:
-		return RegistryAWS, reg, nil
-	default:
-		return "", reg, nil
-	}
-}
-
 func (r *Resolver) ResolveRegistryByImage(img string) (RegistryInterface, error) {
 	if matches := reAWSECR.FindStringSubmatch(img); matches != nil {
-		region := matches[1]
+		accountID := matches[1]
+		region := matches[2]
 		for _, reg := range r.registries {
 			if reg.AWS == nil {
 				continue
 			}
-			if reg.AWS.Region == region {
+			if reg.AWS.Region == region && reg.AWS.AccountID == accountID {
 				return reg, nil
 			}
 		}
@@ -61,7 +38,7 @@ func (r *Resolver) ResolveRegistryByImage(img string) (RegistryInterface, error)
 		}
 	}
 	// may be public image
-	return &PublicRegistry{}, nil
+	return &Registry{}, nil
 }
 
 func NewResolver(configPath string) (*Resolver, error) {

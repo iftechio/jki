@@ -22,7 +22,7 @@ type AWSRegistry struct {
 	LifecyclePolicyText string `json:"lifecycle_policy_text" yaml:"lifecycle_policy_text"`
 }
 
-var _ RegistryInterface = &AWSRegistry{}
+var _ innerRegistryInterface = (*AWSRegistry)(nil)
 
 func newAWSSession(region, accessKey, secretKey string) (*session.Session, error) {
 	return session.NewSession(&aws.Config{
@@ -88,17 +88,8 @@ func (r *AWSRegistry) Prefix() string {
 	return domain
 }
 
-func (r *AWSRegistry) GetAuthToken() (string, error) {
-	auth, err := r.GetAuthConfig()
-	if err != nil {
-		return "", err
-	}
-	return toRegistryAuth(auth.Username, auth.Password)
-}
-
 func (r *AWSRegistry) GetLatestTag(repo string) (tag string, err error) {
-	var sess *session.Session
-	sess, err = newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
+	sess, err := newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
 	if err != nil {
 		return
 	}
@@ -182,11 +173,7 @@ func (r *AWSRegistry) GetAuthConfig() (auth types.AuthConfig, err error) {
 		return auth, fmt.Errorf("decode ecr token: %s", err)
 	}
 	parts := strings.Split(string(data), ":")
-	addr := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", r.AccountID, r.Region)
-	if strings.HasPrefix(r.Region, "cn") {
-		addr += ".cn"
-	}
 	auth.Username, auth.Password = parts[0], parts[1]
-	auth.ServerAddress = addr
+	auth.ServerAddress = r.Prefix()
 	return auth, nil
 }

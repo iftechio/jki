@@ -23,7 +23,6 @@ func ReadDockerIgnore(contextDir string) ([]string, error) {
 	}
 	defer f.Close()
 
-	//return dockerignore.ReadAll(f)
 	scanner := bufio.NewScanner(f)
 	var excludes []string
 	currentLine := 0

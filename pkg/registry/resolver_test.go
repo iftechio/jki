@@ -33,8 +33,14 @@ func TestRegexp(t *testing.T) {
 		if matches == nil {
 			t.Fatalf("no matches")
 		}
-		if matches[1] != tC.region {
-			t.Fatalf("wrong region: expect: %s, get: %s", tC.region, matches[1])
+		var gotRegion string
+		if tC.re == reAWSECR {
+			gotRegion = matches[2]
+		} else if tC.re == reAliCloud {
+			gotRegion = matches[1]
+		}
+		if gotRegion != tC.region {
+			t.Fatalf("wrong region: expect: %s, get: %s", tC.region, gotRegion)
 		}
 	}
 }

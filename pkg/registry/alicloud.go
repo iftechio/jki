@@ -17,7 +17,7 @@ type AliCloudRegistry struct {
 	SecretAccessKey string `json:"secret_access_key" yaml:"secret_access_key"`
 }
 
-var _ RegistryInterface = &AliCloudRegistry{}
+var _ innerRegistryInterface = (*AliCloudRegistry)(nil)
 
 func (r *AliCloudRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
@@ -25,14 +25,6 @@ func (r *AliCloudRegistry) CreateRepoIfNotExists(repo string) error {
 
 func (r *AliCloudRegistry) Prefix() string {
 	return fmt.Sprintf("registry.%s.aliyuncs.com/%s", r.Region, r.Namespace)
-}
-
-func (r *AliCloudRegistry) GetAuthToken() (string, error) {
-	auth, err := r.GetAuthConfig()
-	if err != nil {
-		return "", err
-	}
-	return toRegistryAuth(auth.Username, auth.Password)
 }
 
 func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
@@ -120,7 +112,7 @@ func (r *AliCloudRegistry) Verify() error {
 }
 
 func (r *AliCloudRegistry) GetAuthConfig() (auth types.AuthConfig, err error) {
-	auth.ServerAddress = fmt.Sprintf("registry.%s.aliyuncs.com", r.Region)
+	auth.ServerAddress = r.Prefix()
 	if len(r.Username) != 0 && len(r.Password) != 0 {
 		auth.Username, auth.Password = r.Username, r.Password
 		return auth, nil
