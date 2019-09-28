@@ -60,6 +60,10 @@ registries:
     secret_access_key: <YOUR SECRET ACCESS KEY>
     region: ap-northeast-1
     account_id: <YOUR ACCOUNT ID> # 注意填写的 account id 两边要有双引号
+- name: mine
+  dockerhub:
+    username: foo
+    password: bar
 ```
 
 #### 2.1.4 检查配置正确性

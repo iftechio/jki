@@ -31,4 +31,8 @@ registries:
     secret_access_key: bar
     region: cn-north-1
     account_id: "45678"
+- name: mine
+  dockerhub:
+    username: foo
+    password: bar
 `
