@@ -6,7 +6,7 @@ import (
 
 var (
 	reAWSECR   = regexp.MustCompile(`(?P<AccountID>\d+)\.dkr\.ecr\.(?P<Region>[\w-]+)\.amazonaws\.com`)
-	reAliCloud = regexp.MustCompile(`registry\.(?P<Region>[\w-]+)\.aliyuncs.com`)
+	reAliCloud = regexp.MustCompile(`registry\.(?P<Region>[\w-]+)\.aliyuncs.com/(?P<Namespace>[\w-]{2,30})`)
 )
 
 type Resolver struct {
@@ -28,11 +28,12 @@ func (r *Resolver) ResolveRegistryByImage(img string) (RegistryInterface, error)
 		}
 	} else if matches := reAliCloud.FindStringSubmatch(img); matches != nil {
 		region := matches[1]
+		namespace := matches[2]
 		for _, reg := range r.registries {
 			if reg.AliCloud == nil {
 				continue
 			}
-			if reg.AliCloud.Region == region {
+			if reg.AliCloud.Region == region && reg.AliCloud.Namespace == namespace {
 				return reg, nil
 			}
 		}

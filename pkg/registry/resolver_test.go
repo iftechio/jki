@@ -67,6 +67,24 @@ func TestResolveImage(t *testing.T) {
 					AccountID: "123",
 				},
 			},
+			"a1": &Registry{
+				AliCloud: &AliCloudRegistry{
+					Region:    "cn-hangzhou",
+					Namespace: "ns1",
+				},
+			},
+			"a2": &Registry{
+				AliCloud: &AliCloudRegistry{
+					Region:    "cn-hangzhou",
+					Namespace: "ns-2",
+				},
+			},
+			"a3": &Registry{
+				AliCloud: &AliCloudRegistry{
+					Region:    "cn-shanghai",
+					Namespace: "ns_3",
+				},
+			},
 		},
 	}
 
@@ -85,6 +103,18 @@ func TestResolveImage(t *testing.T) {
 		{
 			image:  "123.dkr.ecr.us-east-1.amazonaws.com/foo1:dev",
 			prefix: "123.dkr.ecr.us-east-1.amazonaws.com",
+		},
+		{
+			image:  "registry.cn-hangzhou.aliyuncs.com/ns-2/busybox:latest",
+			prefix: "registry.cn-hangzhou.aliyuncs.com/ns-2",
+		},
+		{
+			image:  "registry.cn-shanghai.aliyuncs.com/ns_3/busybox:latest",
+			prefix: "registry.cn-shanghai.aliyuncs.com/ns_3",
+		},
+		{
+			image:  "registry.cn-hangzhou.aliyuncs.com/ns1/busybox:latest",
+			prefix: "registry.cn-hangzhou.aliyuncs.com/ns1",
 		},
 	}
 	for _, tC := range testCases {

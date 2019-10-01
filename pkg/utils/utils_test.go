@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestExtraceBaseImages(t *testing.T) {
+func TestExtractBaseImages(t *testing.T) {
 	t.Parallel()
 	dockerfile := `
 FROM w1/w2/w3/foo:v1.2.3 AS builder # qweasd
