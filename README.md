@@ -1,6 +1,12 @@
 # jki - JiKe Image utils
 [![Build Status](https://travis-ci.org/iftechio/jki.svg?branch=master)](https://travis-ci.org/iftechio/jki)
 
+## 0. Features
+
+1. 构建 Docker image（当 Docker daemon 支持 buildkit 的时候自动启用 buildkit）并方便地 push 到不同的云厂商 registry 上
+2. 在不同的云厂商 registry 间复制 image
+3. 自动替换修复 Deployment 不能访问的镜像
+
 ## 1. 安装
 
 请到 https://github.com/iftechio/jki/releases 页面下载
