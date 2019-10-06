@@ -11,7 +11,9 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/containerd/console"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -20,6 +22,8 @@ import (
 	"github.com/iftechio/jki/pkg/git"
 	"github.com/iftechio/jki/pkg/registry"
 	"github.com/iftechio/jki/pkg/utils"
+	bkclient "github.com/moby/buildkit/client"
+	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +34,7 @@ func printInfo(msg string) {
 func prompt(hint string) string {
 	fmt.Print(hint)
 	var input string
-	fmt.Scanln(&input)
+	_, _ = fmt.Scanln(&input)
 	return input
 }
 
@@ -62,17 +66,24 @@ func notifyUser(msg, title string) error {
 }
 
 type BuildOptions struct {
-	context        string
-	dockerFileName string
-	imageName      string
-	tagName        string
-	dstRegistry    *registry.Registry
-	allRegistries  map[string]*registry.Registry
-	dockerClient   *client.Client
+	context         string
+	dockerFileName  string
+	imageName       string
+	tagName         string
+	disableBuildKit bool
+
+	dstRegistry   *registry.Registry
+	allRegistries map[string]*registry.Registry
+	dockerClient  *client.Client
+
+	// for buildkit
+	displayCh chan *bkclient.SolveStatus
 }
 
 func NewBuildOptions() *BuildOptions {
-	return &BuildOptions{}
+	return &BuildOptions{
+		displayCh: make(chan *bkclient.SolveStatus),
+	}
 }
 
 func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
@@ -84,13 +95,28 @@ func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []st
 	if err != nil {
 		return err
 	}
+	buildKitEnabled := false
+	ping, err := o.dockerClient.Ping(context.TODO())
+	if err == nil {
+		if ping.BuilderVersion != "" {
+			buildKitEnabled = ping.BuilderVersion == types.BuilderBuildKit
+		} else if ping.Experimental {
+			buildKitEnabled = versions.GreaterThanOrEqualTo(ping.APIVersion, "1.31")
+		} else {
+			buildKitEnabled = versions.GreaterThanOrEqualTo(ping.APIVersion, "1.39")
+		}
+	}
+	if !buildKitEnabled && !o.disableBuildKit {
+		_, _ = fmt.Fprintln(os.Stderr, "WARNING: buildkit is not supported by daemon")
+		o.disableBuildKit = true
+	}
 	defReg, registries, err := f.LoadRegistries()
 	if err != nil {
 		return err
 	}
 	if strings.IndexFunc(o.imageName, unicode.IsUpper) != -1 {
 		o.imageName = strings.ToLower(o.imageName)
-		fmt.Printf("WARNING: uppercase char is not allowed in image name, changed to `%s`\n", o.imageName)
+		_, _ = fmt.Fprintf(os.Stderr, "WARNING: uppercase char is not allowed in image name, changed to `%s`\n", o.imageName)
 	}
 	o.dstRegistry = registries[defReg]
 	o.allRegistries = registries
@@ -170,6 +196,9 @@ func (o *BuildOptions) Run() error {
 		Dockerfile:  o.dockerFileName,
 		AuthConfigs: authConfigs,
 	}
+	if !o.disableBuildKit {
+		buildOpts.Version = types.BuilderBuildKit
+	}
 
 	ignores, err := utils.ReadDockerIgnore(o.context)
 	if err != nil {
@@ -190,12 +219,38 @@ func (o *BuildOptions) Run() error {
 	}
 	printInfo("开始构建镜像")
 	defer resp.Body.Close()
+
+	var writeAux func(msg jsonmessage.JSONMessage)
+	done := make(chan struct{})
+	if !o.disableBuildKit {
+		out := os.Stderr
+
+		var c console.Console
+		if cons, err := console.ConsoleFromFile(out); err == nil {
+			c = cons
+		}
+		// not using shared context to not disrupt display but let is finish reporting errors
+		go func() {
+			err := progressui.DisplaySolveStatus(ctx, "", c, out, o.displayCh)
+			if err != nil {
+				log.Println(err)
+			}
+			close(done)
+		}()
+
+		writeAux = o.writeSolveStatus
+	} else {
+		close(done)
+	}
+
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
-	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, os.Stdout, termFd, isTerm, nil)
+	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, os.Stdout, termFd, isTerm, writeAux)
 	if err != nil {
 		_ = notifyUser(" ", "镜像构建失败")
 		return err
 	}
+	close(o.displayCh)
+	<-done
 	printInfo("镜像构建成功")
 
 	err = o.dstRegistry.CreateRepoIfNotExists(o.imageName)
@@ -253,5 +308,6 @@ func NewCmdBuild(f factory.Factory) *cobra.Command {
 	flags.StringVarP(&o.dockerFileName, "file", "f", "Dockerfile", "Name of the Dockerfile")
 	flags.StringVar(&o.imageName, "image-name", path.Base(wd), "Custom image name")
 	flags.StringVarP(&o.tagName, "tag-name", "t", "", "Custom tag name")
+	flags.BoolVar(&o.disableBuildKit, "disable-buildkit", false, "Disable buildkit")
 	return cmd
 }

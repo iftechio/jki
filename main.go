@@ -18,7 +18,7 @@ type Commander func(factory.Factory) *cobra.Command
 
 func main() {
 	cf := configflags.New()
-	factory := factory.New(cf)
+	f := factory.New(cf)
 
 	rootCmd := cobra.Command{
 		Use: "jki",
@@ -35,7 +35,7 @@ func main() {
 	}
 
 	for _, c := range commanders {
-		rootCmd.AddCommand(c(factory))
+		rootCmd.AddCommand(c(f))
 	}
 
 	err := rootCmd.Execute()
