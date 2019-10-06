@@ -2,7 +2,6 @@ package build
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +9,6 @@ import (
 	"path"
 	"runtime"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/containerd/console"
@@ -36,7 +34,7 @@ func printInfo(msg string) {
 func prompt(hint string) string {
 	fmt.Print(hint)
 	var input string
-	fmt.Scanln(&input)
+	_, _ = fmt.Scanln(&input)
 	return input
 }
 
@@ -73,13 +71,19 @@ type BuildOptions struct {
 	imageName       string
 	tagName         string
 	disableBuildKit bool
-	dstRegistry     *registry.Registry
-	allRegistries   map[string]*registry.Registry
-	dockerClient    *client.Client
+
+	dstRegistry   *registry.Registry
+	allRegistries map[string]*registry.Registry
+	dockerClient  *client.Client
+
+	// for buildkit
+	displayCh chan *bkclient.SolveStatus
 }
 
 func NewBuildOptions() *BuildOptions {
-	return &BuildOptions{}
+	return &BuildOptions{
+		displayCh: make(chan *bkclient.SolveStatus),
+	}
 }
 
 func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
@@ -194,7 +198,6 @@ func (o *BuildOptions) Run() error {
 	}
 	if !o.disableBuildKit {
 		buildOpts.Version = types.BuilderBuildKit
-		buildOpts.BuildID = time.Now().String()
 	}
 
 	ignores, err := utils.ReadDockerIgnore(o.context)
@@ -218,31 +221,26 @@ func (o *BuildOptions) Run() error {
 	defer resp.Body.Close()
 
 	var writeAux func(msg jsonmessage.JSONMessage)
-
+	done := make(chan struct{})
 	if !o.disableBuildKit {
-		t := newTracer()
-		displayStatus := func(out *os.File, displayCh chan *bkclient.SolveStatus) {
-			var c console.Console
-			if cons, err := console.ConsoleFromFile(out); err == nil {
-				c = cons
-			}
-			// not using shared context to not disrupt display but let is finish reporting errors
-			go progressui.DisplaySolveStatus(context.TODO(), "", c, out, displayCh)
-		}
+		out := os.Stderr
 
-		displayStatus(os.Stderr, t.displayCh)
-		defer close(t.displayCh)
-
-		writeAux = func(msg jsonmessage.JSONMessage) {
-			if msg.ID == "moby.image.id" {
-				var result types.BuildResult
-				if err := json.Unmarshal(*msg.Aux, &result); err != nil {
-					_, _ = fmt.Fprintf(os.Stderr, "failed to parse aux message: %v", err)
-				}
-				return
-			}
-			t.write(msg)
+		var c console.Console
+		if cons, err := console.ConsoleFromFile(out); err == nil {
+			c = cons
 		}
+		// not using shared context to not disrupt display but let is finish reporting errors
+		go func() {
+			err := progressui.DisplaySolveStatus(ctx, "", c, out, o.displayCh)
+			if err != nil {
+				log.Println(err)
+			}
+			close(done)
+		}()
+
+		writeAux = o.writeSolveStatus
+	} else {
+		close(done)
 	}
 
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
@@ -251,6 +249,8 @@ func (o *BuildOptions) Run() error {
 		_ = notifyUser(" ", "镜像构建失败")
 		return err
 	}
+	close(o.displayCh)
+	<-done
 	printInfo("镜像构建成功")
 
 	err = o.dstRegistry.CreateRepoIfNotExists(o.imageName)

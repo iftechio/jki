@@ -7,17 +7,7 @@ import (
 	"github.com/moby/buildkit/client"
 )
 
-type tracer struct {
-	displayCh chan *client.SolveStatus
-}
-
-func newTracer() *tracer {
-	return &tracer{
-		displayCh: make(chan *client.SolveStatus),
-	}
-}
-
-func (t *tracer) write(msg jsonmessage.JSONMessage) {
+func (o *BuildOptions) writeSolveStatus(msg jsonmessage.JSONMessage) {
 	var resp controlapi.StatusResponse
 
 	if msg.ID != "moby.buildkit.trace" {
@@ -29,7 +19,7 @@ func (t *tracer) write(msg jsonmessage.JSONMessage) {
 	if err := json.Unmarshal(*msg.Aux, &dt); err != nil {
 		return
 	}
-	if err := (&resp).Unmarshal(dt); err != nil {
+	if err := resp.Unmarshal(dt); err != nil {
 		return
 	}
 
@@ -66,5 +56,5 @@ func (t *tracer) write(msg jsonmessage.JSONMessage) {
 		})
 	}
 
-	t.displayCh <- &s
+	o.displayCh <- &s
 }
