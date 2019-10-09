@@ -7,6 +7,7 @@ import (
 type innerRegistryInterface interface {
 	CreateRepoIfNotExists(repo string) error
 	Prefix() string
+	Host() string
 	GetAuthConfig() (types.AuthConfig, error)
 	GetLatestTag(repo string) (string, error)
 	Verify() error

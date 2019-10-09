@@ -10,11 +10,12 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	"github.com/spf13/cobra"
+
 	"github.com/iftechio/jki/pkg/factory"
 	"github.com/iftechio/jki/pkg/image"
 	"github.com/iftechio/jki/pkg/registry"
 	"github.com/iftechio/jki/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 type CopyOptions struct {

@@ -26,6 +26,13 @@ func (r *DockerHubRegistry) Prefix() string {
 	return r.Server
 }
 
+func (r *DockerHubRegistry) Host() string {
+	if len(r.Server) == 0 {
+		return "registry-1.docker.io"
+	}
+	return r.Server
+}
+
 func (r *DockerHubRegistry) GetLatestTag(repo string) (string, error) {
 	return "latest", nil
 }

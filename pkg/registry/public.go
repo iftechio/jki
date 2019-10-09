@@ -18,6 +18,10 @@ func (r *PublicRegistry) Prefix() string {
 	return ""
 }
 
+func (r *PublicRegistry) Host() string {
+	return ""
+}
+
 func (r *PublicRegistry) GetLatestTag(repo string) (string, error) {
 	return "latest", nil
 }

@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"github.com/spf13/cobra"
+
 	"github.com/iftechio/jki/pkg/cmd/build"
 	"github.com/iftechio/jki/pkg/cmd/completion"
 	"github.com/iftechio/jki/pkg/cmd/config"
@@ -11,7 +13,6 @@ import (
 	"github.com/iftechio/jki/pkg/cmd/version"
 	"github.com/iftechio/jki/pkg/configflags"
 	"github.com/iftechio/jki/pkg/factory"
-	"github.com/spf13/cobra"
 )
 
 type Commander func(factory.Factory) *cobra.Command

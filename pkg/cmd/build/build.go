@@ -7,24 +7,23 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"unicode"
 
-	"github.com/containerd/console"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/versions"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	"github.com/spf13/cobra"
+
 	"github.com/iftechio/jki/pkg/factory"
 	"github.com/iftechio/jki/pkg/git"
 	"github.com/iftechio/jki/pkg/registry"
 	"github.com/iftechio/jki/pkg/utils"
-	bkclient "github.com/moby/buildkit/client"
-	"github.com/moby/buildkit/util/progress/progressui"
-	"github.com/spf13/cobra"
 )
 
 func printInfo(msg string) {
@@ -75,22 +74,20 @@ type BuildOptions struct {
 	dstRegistry   *registry.Registry
 	allRegistries map[string]*registry.Registry
 	dockerClient  *client.Client
-
-	// for buildkit
-	displayCh chan *bkclient.SolveStatus
 }
 
 func NewBuildOptions() *BuildOptions {
-	return &BuildOptions{
-		displayCh: make(chan *bkclient.SolveStatus),
-	}
+	return &BuildOptions{}
 }
 
 func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
-	if len(args) > 1 {
-		o.context = args[0]
-	}
 	var err error
+	if len(args) > 1 {
+		o.context, err = filepath.Abs(args[0])
+		if err != nil {
+			return fmt.Errorf("failed to resolve absolute path: %s", err)
+		}
+	}
 	o.dockerClient, err = f.DockerClient()
 	if err != nil {
 		return err
@@ -98,12 +95,11 @@ func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []st
 	buildKitEnabled := false
 	ping, err := o.dockerClient.Ping(context.TODO())
 	if err == nil {
-		if ping.BuilderVersion != "" {
-			buildKitEnabled = ping.BuilderVersion == types.BuilderBuildKit
-		} else if ping.Experimental {
-			buildKitEnabled = versions.GreaterThanOrEqualTo(ping.APIVersion, "1.31")
+		cliVersion := o.dockerClient.ClientVersion()
+		if ping.Experimental {
+			buildKitEnabled = versions.GreaterThanOrEqualTo(cliVersion, "1.31")
 		} else {
-			buildKitEnabled = versions.GreaterThanOrEqualTo(ping.APIVersion, "1.39")
+			buildKitEnabled = versions.GreaterThanOrEqualTo(cliVersion, "1.39")
 		}
 	}
 	if !buildKitEnabled && !o.disableBuildKit {
@@ -164,93 +160,18 @@ func (o *BuildOptions) Run() error {
 	repoWithTag := fmt.Sprintf("%s:%s", o.imageName, tag)
 	image := fmt.Sprintf("%s/%s", o.dstRegistry.Prefix(), repoWithTag)
 
-	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
-	dkfile, err := os.Open(o.dockerFileName)
-	if err != nil {
-		return err
-	}
-	defer dkfile.Close()
-	baseImages, err := utils.ExtractBaseImages(dkfile)
-	if err != nil {
-		return err
-	}
-	mem := make(map[string]struct{}, len(o.allRegistries))
-	for _, baseImage := range baseImages {
-		for name, reg := range o.allRegistries {
-			if _, ok := mem[name]; ok {
-				continue
-			}
-			if strings.HasPrefix(baseImage, reg.Prefix()) {
-				authCfg, err := reg.GetAuthConfig()
-				if err != nil {
-					return fmt.Errorf("get authconfig of %s: %s", name, err)
-				}
-				authConfigs[authCfg.ServerAddress] = authCfg
-				mem[name] = struct{}{}
-			}
-		}
-	}
-	buildOpts := types.ImageBuildOptions{
-		Tags:        []string{image},
-		Remove:      true,
-		Dockerfile:  o.dockerFileName,
-		AuthConfigs: authConfigs,
-	}
-	if !o.disableBuildKit {
-		buildOpts.Version = types.BuilderBuildKit
-	}
-
-	ignores, err := utils.ReadDockerIgnore(o.context)
-	if err != nil {
-		return err
-	}
-	tarStream, err := archive.TarWithOptions(o.context, &archive.TarOptions{
-		ExcludePatterns: ignores,
-	})
-	if err != nil {
-		return fmt.Errorf("tar: %s", err)
-	}
-	defer tarStream.Close()
-
-	resp, err := o.dockerClient.ImageBuild(ctx, tarStream, buildOpts)
-	if err != nil {
-		_ = notifyUser(" ", "镜像构建失败")
-		return err
-	}
-	printInfo("开始构建镜像")
-	defer resp.Body.Close()
-
-	var writeAux func(msg jsonmessage.JSONMessage)
-	done := make(chan struct{})
-	if !o.disableBuildKit {
-		out := os.Stderr
-
-		var c console.Console
-		if cons, err := console.ConsoleFromFile(out); err == nil {
-			c = cons
-		}
-		// not using shared context to not disrupt display but let is finish reporting errors
-		go func() {
-			err := progressui.DisplaySolveStatus(ctx, "", c, out, o.displayCh)
-			if err != nil {
-				log.Println(err)
-			}
-			close(done)
-		}()
-
-		writeAux = o.writeSolveStatus
-	} else {
-		close(done)
-	}
-
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
-	err = jsonmessage.DisplayJSONMessagesStream(resp.Body, os.Stdout, termFd, isTerm, writeAux)
+
+	if o.disableBuildKit {
+		err = o.runWithoutBuildKit(ctx, image)
+	} else {
+		err = o.runBuildKit(ctx, image)
+	}
+
 	if err != nil {
 		_ = notifyUser(" ", "镜像构建失败")
 		return err
 	}
-	close(o.displayCh)
-	<-done
 	printInfo("镜像构建成功")
 
 	err = o.dstRegistry.CreateRepoIfNotExists(o.imageName)
@@ -283,6 +204,64 @@ func (o *BuildOptions) Run() error {
 	printInfo("镜像地址已复制到粘贴板")
 	_ = notifyUser(repoWithTag, "镜像构建并上传成功")
 	return nil
+}
+
+func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, image string) error {
+	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
+	dkfile, err := os.Open(o.dockerFileName)
+	if err != nil {
+		return err
+	}
+	defer dkfile.Close()
+	baseImages, err := utils.ExtractBaseImages(dkfile)
+	if err != nil {
+		return err
+	}
+	mem := make(map[string]struct{}, len(o.allRegistries))
+	for _, baseImage := range baseImages {
+		for name, reg := range o.allRegistries {
+			if _, ok := mem[name]; ok {
+				continue
+			}
+			if strings.HasPrefix(baseImage, reg.Prefix()) {
+				authCfg, err := reg.GetAuthConfig()
+				if err != nil {
+					return fmt.Errorf("get authconfig of %s: %s", name, err)
+				}
+				authConfigs[authCfg.ServerAddress] = authCfg
+				mem[name] = struct{}{}
+			}
+		}
+	}
+	buildOpts := types.ImageBuildOptions{
+		Tags:        []string{image},
+		Remove:      true,
+		Dockerfile:  o.dockerFileName,
+		AuthConfigs: authConfigs,
+	}
+
+	ignores, err := utils.ReadDockerIgnore(o.context)
+	if err != nil {
+		return err
+	}
+	tarStream, err := archive.TarWithOptions(o.context, &archive.TarOptions{
+		ExcludePatterns: ignores,
+	})
+	if err != nil {
+		return fmt.Errorf("tar: %s", err)
+	}
+	defer tarStream.Close()
+
+	resp, err := o.dockerClient.ImageBuild(ctx, tarStream, buildOpts)
+	if err != nil {
+		_ = notifyUser(" ", "镜像构建失败")
+		return err
+	}
+	printInfo("开始构建镜像")
+	defer resp.Body.Close()
+
+	termFd, isTerm := term.GetFdInfo(os.Stdout)
+	return jsonmessage.DisplayJSONMessagesStream(resp.Body, os.Stdout, termFd, isTerm, nil)
 }
 
 func NewCmdBuild(f factory.Factory) *cobra.Command {

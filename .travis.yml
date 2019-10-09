@@ -1,21 +1,21 @@
 language: go
 go:
-- 1.12.x
+  - 1.12.x
 os:
-- linux
-- osx
+  - linux
+  - osx
 install: true
 env:
-- GO111MODULE=on NAME=jki
+  - GO111MODULE=on NAME=jki
 script:
-- diff -u <(echo -n) <(gofmt -d ./pkg ./main.go)
-- go test -v -race ./...
+  - diff -u <(echo -n) <(gofmt -d ./pkg ./main.go)
+  - go test -v -race ./...
 cache:
   directories:
-  - "$HOME/.cache/go-build"
-  - "$HOME/gopath/pkg/mod"
+    - "$HOME/.cache/go-build"
+    - "$HOME/gopath/pkg/mod"
 before_deploy:
-- make VERSION=${TRAVIS_TAG#v}
+  - make VERSION=${TRAVIS_TAG#v}
 deploy:
   provider: releases
   name: Release $TRAVIS_TAG

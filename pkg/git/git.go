@@ -13,7 +13,7 @@ func getOutput(dumpError bool, args ...string) (string, error) {
 	if err != nil && dumpError {
 		if ee, ok := err.(*exec.ExitError); ok {
 			c := strings.Join(args, " ")
-			fmt.Fprintf(os.Stderr, "ERROR: `%s`: %s", c, string(ee.Stderr))
+			_, _ = fmt.Fprintf(os.Stderr, "ERROR: `%s`: %s", c, string(ee.Stderr))
 		}
 	}
 	return strings.TrimSpace(string(data)), err
