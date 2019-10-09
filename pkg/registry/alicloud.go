@@ -27,6 +27,10 @@ func (r *AliCloudRegistry) Prefix() string {
 	return fmt.Sprintf("registry.%s.aliyuncs.com/%s", r.Region, r.Namespace)
 }
 
+func (r *AliCloudRegistry) Host() string {
+	return fmt.Sprintf("registry.%s.aliyuncs.com", r.Region)
+}
+
 func (r *AliCloudRegistry) GetLatestTag(repo string) (tag string, err error) {
 	var client *cr.Client
 	if len(r.AccessKey) != 0 && len(r.SecretAccessKey) != 0 {

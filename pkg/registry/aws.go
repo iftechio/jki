@@ -88,6 +88,10 @@ func (r *AWSRegistry) Prefix() string {
 	return domain
 }
 
+func (r *AWSRegistry) Host() string {
+	return r.Prefix()
+}
+
 func (r *AWSRegistry) GetLatestTag(repo string) (tag string, err error) {
 	sess, err := newAWSSession(r.Region, r.AccessKey, r.SecretAccessKey)
 	if err != nil {

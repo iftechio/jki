@@ -52,6 +52,10 @@ func (r *Registry) Prefix() string {
 	return r.delegate().Prefix()
 }
 
+func (r *Registry) Host() string {
+	return r.delegate().Host()
+}
+
 func (r *Registry) GetAuthToken() (string, error) {
 	auth, err := r.GetAuthConfig()
 	if err != nil {
