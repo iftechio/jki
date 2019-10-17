@@ -70,6 +70,7 @@ type BuildOptions struct {
 	imageName       string
 	tagName         string
 	disableBuildKit bool
+	noConfirm       bool
 
 	dstRegistry   *registry.Registry
 	allRegistries map[string]*registry.Registry
@@ -124,7 +125,7 @@ func (o *BuildOptions) Validate(args []string) error {
 }
 
 func (o *BuildOptions) Run() error {
-	if git.HasChanges() {
+	if git.HasChanges() && !o.noConfirm {
 		input := strings.ToLower(prompt("当前有未提交的改动, 是否继续构建? (Y/n) "))
 		if input == "n" {
 			return nil
@@ -288,5 +289,6 @@ func NewCmdBuild(f factory.Factory) *cobra.Command {
 	flags.StringVar(&o.imageName, "image-name", path.Base(wd), "Custom image name")
 	flags.StringVarP(&o.tagName, "tag-name", "t", "", "Custom tag name")
 	flags.BoolVar(&o.disableBuildKit, "disable-buildkit", false, "Disable buildkit")
+	flags.BoolVarP(&o.noConfirm, "no-confirm", "y", false, "Answer yes for all questions")
 	return cmd
 }

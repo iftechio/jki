@@ -21,20 +21,19 @@ func getOutput(dumpError bool, args ...string) (string, error) {
 
 func HasChanges() bool {
 	cmd := exec.Command("git", "diff", "--quiet")
-	cmd.Stderr = os.Stderr
 	return cmd.Run() != nil
 }
 
 func GetOriginURL() (string, error) {
-	return getOutput(true, "git", "config", "--get", "remote.origin.url")
+	return getOutput(false, "git", "config", "--get", "remote.origin.url")
 }
 
 func GetCurrentBranch() (string, error) {
-	return getOutput(true, "git", "rev-parse", "--abbrev-ref", "HEAD")
+	return getOutput(false, "git", "rev-parse", "--abbrev-ref", "HEAD")
 }
 
 func GetAbbrevCommitHash() (string, error) {
-	return getOutput(true, "git", "rev-parse", "--short", "HEAD")
+	return getOutput(false, "git", "rev-parse", "--short", "HEAD")
 }
 
 func GetTagOfCommit(commitHash string) (string, error) {
