@@ -112,6 +112,8 @@ $ jki build --image-name <IMAGE NAME>
 $ jki build --registry aws-tokyo
 ```
 
+更多选项可以参考 `jki build -h`
+
 ### 2.3. 跨云服务商复制镜像
 
 以上面的配置为例:
