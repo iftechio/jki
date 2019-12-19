@@ -1,5 +1,6 @@
 language: go
 go:
+  # 1.13+ will throw an error "invalid pseudo-version: version before v1.3.0 would have negative patch number"
   - 1.12.x
 os:
   - linux
@@ -25,7 +26,6 @@ deploy:
   file_glob: true
   skip_cleanup: true
   on:
-    #condition: $TRAVIS_GO_VERSION = master
     tags: true
     branch: master
     repo: iftechio/jki

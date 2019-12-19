@@ -43,3 +43,23 @@ func ExtractBaseImages(input io.Reader) ([]string, error) {
 	}
 	return ret, nil
 }
+
+// ConvertKVStringsToMapWithNil converts ["key=value"] to {"key":"value"}
+// but set unset keys to nil - meaning the ones with no "=" in them.
+// We use this in cases where we need to distinguish between
+//   FOO=  and FOO
+// where the latter case just means FOO was mentioned but not given a value
+// Credit to: https://github.com/docker/cli/blob/ebca1413117a3fcb81c89d6be226dcec74e5289f/opts/parse.go#L60
+func ConvertKVStringsToMapWithNil(values []string) map[string]*string {
+	result := make(map[string]*string, len(values))
+	for _, value := range values {
+		kv := strings.SplitN(value, "=", 2)
+		if len(kv) == 1 {
+			result[kv[0]] = nil
+		} else {
+			result[kv[0]] = &kv[1]
+		}
+	}
+
+	return result
+}

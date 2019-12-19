@@ -69,8 +69,10 @@ type BuildOptions struct {
 	dockerFileName  string
 	imageName       string
 	tagName         string
+	buildArgs       []string
 	disableBuildKit bool
 	noConfirm       bool
+	push            bool
 
 	dstRegistry   *registry.Registry
 	allRegistries map[string]*registry.Registry
@@ -175,6 +177,10 @@ func (o *BuildOptions) Run() error {
 	}
 	printInfo("镜像构建成功")
 
+	if !o.push {
+		return nil
+	}
+
 	err = o.dstRegistry.CreateRepoIfNotExists(o.imageName)
 	if err != nil {
 		return err
@@ -239,6 +245,7 @@ func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, image string) err
 		Remove:      true,
 		Dockerfile:  o.dockerFileName,
 		AuthConfigs: authConfigs,
+		BuildArgs:   utils.ConvertKVStringsToMapWithNil(o.buildArgs),
 	}
 
 	ignores, err := utils.ReadDockerIgnore(o.context)
@@ -255,7 +262,6 @@ func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, image string) err
 
 	resp, err := o.dockerClient.ImageBuild(ctx, tarStream, buildOpts)
 	if err != nil {
-		_ = notifyUser(" ", "镜像构建失败")
 		return err
 	}
 	printInfo("开始构建镜像")
@@ -290,5 +296,7 @@ func NewCmdBuild(f factory.Factory) *cobra.Command {
 	flags.StringVarP(&o.tagName, "tag-name", "t", "", "Custom tag name")
 	flags.BoolVar(&o.disableBuildKit, "disable-buildkit", false, "Disable buildkit")
 	flags.BoolVarP(&o.noConfirm, "no-confirm", "y", false, "Answer yes for all questions")
+	flags.BoolVar(&o.push, "push", true, "Whether to push built image")
+	flags.StringSliceVar(&o.buildArgs, "build-arg", nil, "Set build-time variables")
 	return cmd
 }
