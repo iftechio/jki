@@ -70,9 +70,12 @@ type BuildOptions struct {
 	imageName       string
 	tagName         string
 	buildArgs       []string
+	labels          []string
 	disableBuildKit bool
 	noConfirm       bool
-	push            bool
+	noPush          bool
+	noCache         bool
+	pull            bool
 
 	dstRegistry   *registry.Registry
 	allRegistries map[string]*registry.Registry
@@ -165,10 +168,20 @@ func (o *BuildOptions) Run() error {
 
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
 
+	buildOpts := types.ImageBuildOptions{
+		Tags:       []string{image},
+		Remove:     true,
+		Dockerfile: o.dockerFileName,
+		PullParent: o.pull,
+		NoCache:    o.noCache,
+		BuildArgs:  utils.ConvertKVStringsToMapWithNil(o.buildArgs),
+		Labels:     utils.ConvertKVStringsToMap(o.labels),
+	}
+
 	if o.disableBuildKit {
-		err = o.runWithoutBuildKit(ctx, image)
+		err = o.runWithoutBuildKit(ctx, buildOpts)
 	} else {
-		err = o.runBuildKit(ctx, image)
+		err = o.runBuildKit(ctx, buildOpts)
 	}
 
 	if err != nil {
@@ -177,7 +190,7 @@ func (o *BuildOptions) Run() error {
 	}
 	printInfo("镜像构建成功")
 
-	if !o.push {
+	if o.noPush {
 		return nil
 	}
 
@@ -213,7 +226,7 @@ func (o *BuildOptions) Run() error {
 	return nil
 }
 
-func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, image string) error {
+func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
 	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
 	dkfile, err := os.Open(o.dockerFileName)
 	if err != nil {
@@ -240,13 +253,7 @@ func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, image string) err
 			}
 		}
 	}
-	buildOpts := types.ImageBuildOptions{
-		Tags:        []string{image},
-		Remove:      true,
-		Dockerfile:  o.dockerFileName,
-		AuthConfigs: authConfigs,
-		BuildArgs:   utils.ConvertKVStringsToMapWithNil(o.buildArgs),
-	}
+	buildOpts.AuthConfigs = authConfigs
 
 	ignores, err := utils.ReadDockerIgnore(o.context)
 	if err != nil {
@@ -296,7 +303,10 @@ func NewCmdBuild(f factory.Factory) *cobra.Command {
 	flags.StringVarP(&o.tagName, "tag-name", "t", "", "Custom tag name")
 	flags.BoolVar(&o.disableBuildKit, "disable-buildkit", false, "Disable buildkit")
 	flags.BoolVarP(&o.noConfirm, "no-confirm", "y", false, "Answer yes for all questions")
-	flags.BoolVar(&o.push, "push", true, "Whether to push built image")
+	flags.BoolVar(&o.noPush, "no-push", false, "Do not push built image")
+	flags.BoolVar(&o.noCache, "no-cache", false, "Do not use cache when building the image")
+	flags.BoolVar(&o.pull, "pull", false, "Always attempt to pull a newer version of the image")
 	flags.StringSliceVar(&o.buildArgs, "build-arg", nil, "Set build-time variables")
+	flags.StringSliceVar(&o.labels, "label", nil, "Set metadata for an image")
 	return cmd
 }

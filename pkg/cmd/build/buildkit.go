@@ -20,8 +20,6 @@ import (
 	"github.com/moby/buildkit/util/progress/progressui"
 	fsutiltypes "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
-
-	"github.com/iftechio/jki/pkg/utils"
 )
 
 func writeSolveStatusToChannel(displayCh chan *bkclient.SolveStatus) func(jsonmessage.JSONMessage) {
@@ -92,7 +90,7 @@ func trySession(contextDir string) (*session.Session, error) {
 	return s, nil
 }
 
-func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
+func (o *BuildOptions) runBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
 	s, err := trySession(o.context)
 	if err != nil {
 		return err
@@ -126,18 +124,13 @@ func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
 
 	eg.Go(func() error {
 		defer s.Close()
-		bo := types.ImageBuildOptions{
-			Tags:          []string{tag},
-			Remove:        true,
-			Version:       types.BuilderBuildKit,
-			RemoteContext: "client-session",
-			SessionID:     s.ID(),
-			BuildID:       time.Now().String(),
-			Dockerfile:    path.Base(o.dockerFileName),
-			BuildArgs:     utils.ConvertKVStringsToMapWithNil(o.buildArgs),
-		}
+		buildOpts.Version = types.BuilderBuildKit
+		buildOpts.RemoteContext = "client-session"
+		buildOpts.SessionID = s.ID()
+		buildOpts.BuildID = time.Now().String()
+		buildOpts.Dockerfile = path.Base(o.dockerFileName)
 
-		response, err := o.dockerClient.ImageBuild(ctx, nil, bo)
+		response, err := o.dockerClient.ImageBuild(ctx, nil, buildOpts)
 		if err != nil {
 			return err
 		}
@@ -151,7 +144,7 @@ func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
 		eg.Go(func() error {
 			select {
 			case <-ctx.Done():
-				return o.dockerClient.BuildCancel(ctx, bo.BuildID)
+				return o.dockerClient.BuildCancel(ctx, buildOpts.BuildID)
 			case <-done:
 			}
 			return nil
