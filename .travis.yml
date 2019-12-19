@@ -1,6 +1,7 @@
 language: go
 go:
-  - 1.13.x
+  # 1.13+ will throw an error "invalid pseudo-version: version before v1.3.0 would have negative patch number"
+  - 1.12.x
 os:
   - linux
   - osx
