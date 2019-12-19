@@ -1,6 +1,6 @@
 module github.com/iftechio/jki
 
-go 1.12
+go 1.13
 
 replace github.com/docker/docker => github.com/docker/engine v1.4.2-0.20190822205725-ed20165a37b4
 

@@ -1,6 +1,6 @@
 language: go
 go:
-  - 1.12.x
+  - 1.13.x
 os:
   - linux
   - osx
@@ -25,7 +25,6 @@ deploy:
   file_glob: true
   skip_cleanup: true
   on:
-    #condition: $TRAVIS_GO_VERSION = master
     tags: true
     branch: master
     repo: iftechio/jki
