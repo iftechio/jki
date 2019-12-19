@@ -12,7 +12,7 @@ import (
 
 type AuthProvider struct {
 	registries map[string]*registry.Registry
-	cache      sync.Map // for concurrent use
+	cache      sync.Map
 }
 
 func NewAuthProvider(registries map[string]*registry.Registry) *AuthProvider {

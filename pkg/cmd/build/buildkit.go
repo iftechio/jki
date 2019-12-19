@@ -2,19 +2,18 @@ package build
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"path"
 	"time"
 
-	"encoding/json"
-
 	"github.com/containerd/console"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	controlapi "github.com/moby/buildkit/api/services/control"
 	bkclient "github.com/moby/buildkit/client"
 	"github.com/moby/buildkit/session"
 	"github.com/moby/buildkit/session/filesync"
@@ -22,7 +21,7 @@ import (
 	fsutiltypes "github.com/tonistiigi/fsutil/types"
 	"golang.org/x/sync/errgroup"
 
-	controlapi "github.com/moby/buildkit/api/services/control"
+	"github.com/iftechio/jki/pkg/utils"
 )
 
 func writeSolveStatusToChannel(displayCh chan *bkclient.SolveStatus) func(jsonmessage.JSONMessage) {
@@ -85,7 +84,7 @@ func resetUIDAndGID(_ string, s *fsutiltypes.Stat) bool {
 	return true
 }
 
-func trySession(dockercli *client.Client, contextDir string) (*session.Session, error) {
+func trySession(contextDir string) (*session.Session, error) {
 	s, err := session.NewSession(context.TODO(), path.Base(contextDir), contextDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create session: %s", err)
@@ -94,7 +93,7 @@ func trySession(dockercli *client.Client, contextDir string) (*session.Session, 
 }
 
 func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
-	s, err := trySession(o.dockerClient, o.context)
+	s, err := trySession(o.context)
 	if err != nil {
 		return err
 	}
@@ -135,6 +134,7 @@ func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
 			SessionID:     s.ID(),
 			BuildID:       time.Now().String(),
 			Dockerfile:    path.Base(o.dockerFileName),
+			BuildArgs:     utils.ConvertKVStringsToMapWithNil(o.buildArgs),
 		}
 
 		response, err := o.dockerClient.ImageBuild(ctx, nil, bo)
@@ -151,7 +151,7 @@ func (o *BuildOptions) runBuildKit(ctx context.Context, tag string) error {
 		eg.Go(func() error {
 			select {
 			case <-ctx.Done():
-				return o.dockerClient.BuildCancel(context.TODO(), bo.BuildID)
+				return o.dockerClient.BuildCancel(ctx, bo.BuildID)
 			case <-done:
 			}
 			return nil
