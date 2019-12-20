@@ -7,18 +7,19 @@
 2. 在不同的云厂商 registry 间复制 image
 3. 自动替换修复 Deployment 不能访问的镜像
 
-## 1. 安装
-
-请到 https://github.com/iftechio/jki/releases 页面下载
-
-下载后赋予可执行权限, 然后复制到 `PATH` 中, 比如:
+## 1. 安装最新版本
 
 ```
-VERSION=0.0.7
-OS=darwin
-wget "https://github.com/iftechio/jki/releases/download/v$VERSION/jki_${VERSION}_${OS}_amd64.tar.gz"
-tar xf jki_${VERSION}_${OS}_amd64.tar.gz
-cp jki_${VERSION}_${OS}_amd64/jki /usr/local/bin/
+
+curl -s https://api.github.com/repos/iftechio/jki/releases/latest \
+  | grep browser_download_url \
+  | grep darwin \
+  | cut -d '"' -f 4 \
+  | wget -i -
+
+tar --strip-components=1 -xf jki*
+
+sudo mv jki /usr/local/bin/
 ```
 
 ## 2. 使用方法
