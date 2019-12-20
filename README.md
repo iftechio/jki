@@ -10,7 +10,6 @@
 ## 1. 安装最新版本
 
 ```
-
 curl -s https://api.github.com/repos/iftechio/jki/releases/latest \
   | grep browser_download_url \
   | grep darwin \
