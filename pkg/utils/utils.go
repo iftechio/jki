@@ -23,6 +23,13 @@ func HomeDir() string {
 	return h
 }
 
+func Prompt(hint string) string {
+	fmt.Print(hint)
+	var input string
+	_, _ = fmt.Scanln(&input)
+	return input
+}
+
 func ExtractBaseImages(input io.Reader) ([]string, error) {
 	scanner := bufio.NewScanner(input)
 	var ret []string
