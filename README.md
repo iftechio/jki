@@ -80,7 +80,15 @@ $ jki config check
 
 如果配置语法没问题的话会打印 `OK!`
 
-### 2.2. 构建镜像
+#### 2.2 检查更新
+
+```
+$ jki upgrade
+```
+
+注：如果是通过 homebrew 安装的请通过 homebrew 更新
+
+### 2.3 构建镜像
 
 默认情况下会把构建出来的镜像推送到配置里指定的 `default-registry`
 
@@ -114,7 +122,7 @@ $ jki build --registry aws-tokyo
 
 更多选项可以参考 `jki build -h`
 
-### 2.3. 跨云服务商复制镜像
+### 2.4 跨云服务商复制镜像
 
 以上面的配置为例:
 
@@ -139,7 +147,7 @@ $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo
 
 会查询 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo` 该 image 最新的 tag, 然后复制到 `ali` 对应的 registry
 
-### 2.4. 自动替换修复 deployment 不能访问的镜像
+### 2.5 自动替换修复 deployment 不能访问的镜像
 
 执行命令后会逐个提示替换无法现在的镜像
 
