@@ -147,7 +147,7 @@ func downloadAsset(client *http.Client, asset releaseAsset) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Printf("Asset has been saved at %s", fp)
+	fmt.Printf("\nAsset has been saved at %s\n", fp)
 	return fp, err
 }
 
@@ -229,7 +229,7 @@ func (o *upgradeOptions) Run() error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Successfully upgrade to %s!", release.TagName)
+		fmt.Printf("Successfully upgrade to %s!\n", release.TagName)
 	}
 	if intact {
 		fmt.Printf("OS not supported: %s\n", runtime.GOOS)
