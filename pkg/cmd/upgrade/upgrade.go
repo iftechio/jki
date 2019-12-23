@@ -210,8 +210,9 @@ func (o *upgradeOptions) Run() error {
 		}
 		intact = false
 		if !o.noConfirm {
-			fmt.Printf("Latest version is: %s\n", release.TagName)
-			fmt.Printf("Updated at: %s\n", asset.UpdatedAt)
+			localLoc := time.Now().Local().Location()
+			fmt.Printf("Current version is: %s\n", info.Version)
+			fmt.Printf("Latest version is: %s (%s)\n", release.TagName, asset.UpdatedAt.In(localLoc))
 			ans := utils.Prompt("Want to upgrade? (Y/n) ")
 			if strings.ToLower(ans) == "n" {
 				return nil
