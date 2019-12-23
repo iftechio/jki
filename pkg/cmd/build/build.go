@@ -30,13 +30,6 @@ func printInfo(msg string) {
 	fmt.Printf(">>>>> %s\n", msg)
 }
 
-func prompt(hint string) string {
-	fmt.Print(hint)
-	var input string
-	_, _ = fmt.Scanln(&input)
-	return input
-}
-
 func setClipboard(data string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -131,7 +124,7 @@ func (o *BuildOptions) Validate(args []string) error {
 
 func (o *BuildOptions) Run() error {
 	if git.HasChanges() && !o.noConfirm {
-		input := strings.ToLower(prompt("当前有未提交的改动, 是否继续构建? (Y/n) "))
+		input := strings.ToLower(utils.Prompt("当前有未提交的改动, 是否继续构建? (Y/n) "))
 		if input == "n" {
 			return nil
 		}
