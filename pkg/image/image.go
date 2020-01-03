@@ -34,5 +34,8 @@ func FromString(imageStr string) Image {
 }
 
 func (image *Image) String() string {
+	if len(image.Domain) == 0 {
+		return image.Repo + ":" + image.Tag
+	}
 	return image.Domain + "/" + image.Repo + ":" + image.Tag
 }
