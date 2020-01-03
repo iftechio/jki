@@ -1,11 +1,29 @@
 # jki - JiKe Image utils
 [![Build Status](https://travis-ci.org/iftechio/jki.svg?branch=master)](https://travis-ci.org/iftechio/jki)
 
+Table of Contents
+=================
+
+* [0. Features](#0-features)
+* [1. 安装最新版本](#1-安装最新版本)
+* [2. 使用方法](#2-使用方法)
+    * [2.1. 生成配置](#21-生成配置)
+        * [2.1.1 保存默认配置](#211-保存默认配置)
+        * [2.1.2 修改配置](#212-修改配置)
+        * [2.1.3 查看配置](#213-查看配置)
+        * [2.1.4 检查配置正确性](#214-检查配置正确性)
+    * [2.2 检查更新](#22-检查更新)
+    * [2.3 构建镜像](#23-构建镜像)
+    * [2.4 部署镜像](#24-部署镜像)
+    * [2.5 跨云服务商复制镜像](#25-跨云服务商复制镜像)
+    * [2.6 自动替换修复 deployment 不能访问的镜像](#26-自动替换修复-deployment-不能访问的镜像)
+
 ## 0. Features
 
 1. 构建 Docker image（当 Docker daemon 支持 buildkit 的时候自动启用 buildkit）并方便地 push 到不同的云厂商 registry 上
 2. 在不同的云厂商 registry 间复制 image
-3. 自动替换修复 Deployment 不能访问的镜像
+3. 方便地更新 Deployment/StatefulSet/DaemonSet/CronJob 的 image
+4. 自动替换修复 Deployment 不能访问的镜像
 
 ## 1. 安装最新版本
 
@@ -18,7 +36,7 @@ curl -s https://api.github.com/repos/iftechio/jki/releases/latest \
 
 tar --strip-components=1 -xf jki*
 
-sudo mv jki /usr/local/bin/
+sudo cp jki /usr/local/bin/
 ```
 
 ## 2. 使用方法
@@ -80,7 +98,7 @@ $ jki config check
 
 如果配置语法没问题的话会打印 `OK!`
 
-#### 2.2 检查更新
+### 2.2 检查更新
 
 ```
 $ jki upgrade
@@ -122,32 +140,59 @@ $ jki build --registry aws-tokyo
 
 更多选项可以参考 `jki build -h`
 
-### 2.4 跨云服务商复制镜像
+### 2.4 部署镜像
 
-以上面的配置为例:
+> 注： 默认情况下，jki 会以 Deployment 为目标资源，并且把镜像的名字当作目标资源的名字。
+>
+> 目前只支持 Pod、Deployment、StatefulSet、DaemonSet、CronJob 这几种资源，如果 Pod 内有多个 Container 的话，必须通过 `-c` 参数指定 Container 的名字。
+
+只指定镜像:
+```
+# 会更新默认 namespace 下名为 `nginx` 的 Deployment 里的 image 为 `nginx:alpine`
+$ jki deploy nginx:alpine
+```
+
+指定镜像跟 Resource:
+```
+# 会更新 foo namespace 下名为 `nginx` 的 StatefulSet 里的 image 为 `nginx:alpine`
+$ jki deploy -n foo sts nginx:alpine
+```
+
+指定名字跟 Resource:
+```
+# 会更新默认 namespace 下名为 `bar` 的 Deployment 里的名为 `app` 的 container 的 image 为 `nginx:alpine`
+$ jki deploy -c app bar nginx:alpine
+```
+
+指定镜像、名字跟 Resource:
+```
+# 会更新默认 namespace 下名为 `foo` 的 DaemonSet 里的 image 为 `nginx:alpine`
+$ jki deploy ds/foo nginx:alpine
+```
+
+### 2.5 跨云服务商复制镜像
+
+以上面的配置为例
 
 ```
+# 会把 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar` 该镜像复制到 `ali` 对应的 registry 上
 $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar
 ```
 
-会把 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar` 该镜像复制到 `ali` 对应的 registry 上
-
 指定目标 registry:
-
 ```
+# 会把 `k8s.gcr.io/etcd:3.3.10` 该镜像复制到 `aws-tokyo` 对应的 registry 上
 $ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 ```
 
-会把 `k8s.gcr.io/etcd:3.3.10` 该镜像复制到 `aws-tokyo` 对应的 registry 上
-
 自动复制最新的 tag (仅限于 AWS ECR 跟阿里云容器镜像服务):
 ```
+# 会查询 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo` 该 image 最新的 tag
+# 然后复制到 `ali` 对应的 registry
 $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo
 ```
 
-会查询 `<YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo` 该 image 最新的 tag, 然后复制到 `ali` 对应的 registry
-
-### 2.5 自动替换修复 deployment 不能访问的镜像
+### 2.6 自动替换修复 deployment 不能访问的镜像
 
 执行命令后会逐个提示替换无法现在的镜像
 

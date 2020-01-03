@@ -33,7 +33,7 @@ type releaseResponse struct {
 	Assets  []releaseAsset
 }
 
-type upgradeOptions struct {
+type Options struct {
 	timeout   time.Duration
 	noConfirm bool
 
@@ -41,12 +41,12 @@ type upgradeOptions struct {
 	selfPath string
 }
 
-func (o *upgradeOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
+func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
 	o.client = &http.Client{
 		Transport: &http.Transport{
-			ResponseHeaderTimeout: time.Second * 30,
-			TLSHandshakeTimeout:   time.Second * 20,
-			ExpectContinueTimeout: time.Second * 10,
+			ResponseHeaderTimeout: time.Second * 5,
+			TLSHandshakeTimeout:   time.Second * 5,
+			ExpectContinueTimeout: time.Second * 5,
 		},
 	}
 	if o.timeout > 0 {
@@ -64,7 +64,7 @@ func (o *upgradeOptions) Complete(f factory.Factory, cmd *cobra.Command, args []
 	return nil
 }
 
-func (o *upgradeOptions) Validate(args []string) error {
+func (o *Options) Validate(args []string) error {
 	return validatePath(o.selfPath)
 }
 
@@ -194,7 +194,7 @@ func extractAsset(fp string) error {
 	return nil
 }
 
-func (o *upgradeOptions) Run() error {
+func (o *Options) Run() error {
 	release, err := getLatestRelease(o.client, "https://api.github.com/repos/iftechio/jki/releases/latest")
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func (o *upgradeOptions) Run() error {
 }
 
 func NewCmdUpgrade(f factory.Factory) *cobra.Command {
-	o := &upgradeOptions{}
+	o := &Options{}
 	cmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade to the latest version",

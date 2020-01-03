@@ -17,11 +17,12 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	github.com/tonistiigi/fsutil v0.0.0-20190819224149-3d2716dd0a4d
-	golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc
-	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	google.golang.org/grpc v1.20.1
 	gopkg.in/yaml.v2 v2.2.4
-	k8s.io/api v0.0.0-20191005115622-2e41325d9e4b
-	k8s.io/apimachinery v0.0.0-20191005115455-e71eb83a557c
-	k8s.io/client-go v12.0.0+incompatible
+	k8s.io/api v0.17.0
+	k8s.io/apimachinery v0.17.0
+	k8s.io/cli-runtime v0.17.0
+	k8s.io/client-go v0.17.0
 )

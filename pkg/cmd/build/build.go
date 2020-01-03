@@ -57,7 +57,7 @@ func notifyUser(msg, title string) error {
 	return cmd.Run()
 }
 
-type BuildOptions struct {
+type Options struct {
 	context         string
 	dockerFileName  string
 	imageName       string
@@ -75,11 +75,11 @@ type BuildOptions struct {
 	dockerClient  *client.Client
 }
 
-func NewBuildOptions() *BuildOptions {
-	return &BuildOptions{}
+func NewBuildOptions() *Options {
+	return &Options{}
 }
 
-func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
+func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
 	var err error
 	if len(args) > 1 {
 		o.context, err = filepath.Abs(args[0])
@@ -118,11 +118,11 @@ func (o *BuildOptions) Complete(f factory.Factory, cmd *cobra.Command, args []st
 	return nil
 }
 
-func (o *BuildOptions) Validate(args []string) error {
+func (o *Options) Validate(args []string) error {
 	return nil
 }
 
-func (o *BuildOptions) Run() error {
+func (o *Options) Run() error {
 	if git.HasChanges() && !o.noConfirm {
 		input := strings.ToLower(utils.Prompt("当前有未提交的改动, 是否继续构建? (Y/n) "))
 		if input == "n" {
@@ -219,7 +219,7 @@ func (o *BuildOptions) Run() error {
 	return nil
 }
 
-func (o *BuildOptions) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
+func (o *Options) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
 	authConfigs := make(map[string]types.AuthConfig, len(o.allRegistries))
 	dkfile, err := os.Open(o.dockerFileName)
 	if err != nil {

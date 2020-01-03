@@ -18,14 +18,14 @@ import (
 	"github.com/iftechio/jki/pkg/utils"
 )
 
-type CopyOptions struct {
+type Options struct {
 	resolver     *registry.Resolver
 	dockerClient *client.Client
 	dstRegistry  *registry.Registry
 	saveImage    bool
 }
 
-func (o *CopyOptions) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
+func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
 	var err error
 	o.resolver, err = f.ToResolver()
 	if err != nil {
@@ -51,14 +51,14 @@ func (o *CopyOptions) Complete(f factory.Factory, cmd *cobra.Command, args []str
 	return nil
 }
 
-func (o *CopyOptions) Validate(args []string) error {
+func (o *Options) Validate(args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("wrong number of arguments")
 	}
 	return nil
 }
 
-func (o *CopyOptions) Run(args []string) error {
+func (o *Options) Run(args []string) error {
 	frImg := args[0]
 	ctx := context.TODO()
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
@@ -134,8 +134,8 @@ func (o *CopyOptions) Run(args []string) error {
 	return nil
 }
 
-func NewCopyOptions() *CopyOptions {
-	return &CopyOptions{}
+func NewCopyOptions() *Options {
+	return &Options{}
 }
 
 func NewCmdCp(f factory.Factory) *cobra.Command {
@@ -155,7 +155,7 @@ func NewCmdCp(f factory.Factory) *cobra.Command {
 	return cmd
 }
 
-func (o *CopyOptions) removeImages(ctx context.Context, imageNames ...string) {
+func (o *Options) removeImages(ctx context.Context, imageNames ...string) {
 	for _, name := range imageNames {
 		if _, err := o.dockerClient.ImageRemove(ctx, name, types.ImageRemoveOptions{}); err != nil {
 			fmt.Printf("an error appears in removing image, err: %v\n", err)
@@ -164,7 +164,7 @@ func (o *CopyOptions) removeImages(ctx context.Context, imageNames ...string) {
 	return
 }
 
-func (o *CopyOptions) completeImageStr(imgStr string, reg registry.RegistryInterface) (string, error) {
+func (o *Options) completeImageStr(imgStr string, reg registry.RegistryInterface) (string, error) {
 	if strings.Contains(imgStr, ":") {
 		return imgStr, nil
 	}
