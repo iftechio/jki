@@ -51,9 +51,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 			editor := os.Getenv("EDITOR")
 			if len(editor) == 0 {
 				switch runtime.GOOS {
-				case "darwin":
-					fallthrough
-				case "linux":
+				case "darwin", "linux":
 					editor = "vi"
 				case "windows":
 					editor = "notepad"
@@ -92,7 +90,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 			}
 			for name, reg := range regs {
 				if err := reg.Verify(); err != nil {
-					fmt.Fprintf(os.Stderr, "%s: invalid config: %s\n", name, err)
+					_, _ = fmt.Fprintf(os.Stderr, "%s: invalid config: %s\n", name, err)
 					return
 				}
 			}

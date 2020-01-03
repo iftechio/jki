@@ -36,7 +36,7 @@ type brokenObject struct {
 type transferImageOptions struct {
 	namespace   string
 	kubeClient  *kubernetes.Clientset
-	cp          *cp.CopyOptions
+	cp          *cp.Options
 	dstRegistry *registry.Registry
 }
 
@@ -48,6 +48,10 @@ func (o *transferImageOptions) Complete(f factory.Factory) error {
 	}
 	o.dstRegistry = registries[dstReg]
 	o.kubeClient, err = f.KubeClient()
+	if err != nil {
+		return err
+	}
+	o.namespace, _, err = f.ToRawKubeConfigLoader().Namespace()
 	if err != nil {
 		return err
 	}
@@ -181,7 +185,5 @@ func NewCmdTransferImage(f factory.Factory) *cobra.Command {
 			utils.CheckError(o.Run())
 		},
 	}
-	flags := cmd.Flags()
-	flags.StringVarP(&o.namespace, "namespace", "n", "default", "NS")
 	return cmd
 }

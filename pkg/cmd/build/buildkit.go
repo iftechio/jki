@@ -90,7 +90,7 @@ func trySession(contextDir string) (*session.Session, error) {
 	return s, nil
 }
 
-func (o *BuildOptions) runBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
+func (o *Options) runBuildKit(ctx context.Context, buildOpts types.ImageBuildOptions) error {
 	s, err := trySession(o.context)
 	if err != nil {
 		return err
