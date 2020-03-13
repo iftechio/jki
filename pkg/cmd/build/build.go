@@ -274,8 +274,9 @@ func (o *Options) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageB
 func NewCmdBuild(f factory.Factory) *cobra.Command {
 	o := NewBuildOptions()
 	cmd := &cobra.Command{
-		Use:   "build [PATH]",
-		Short: "Build docker image",
+		Use:     "build [PATH]",
+		Aliases: []string{"b"},
+		Short:   "Build docker image",
 		Run: func(cmd *cobra.Command, args []string) {
 			utils.CheckError(o.Complete(f, cmd, args))
 			utils.CheckError(o.Validate(args))

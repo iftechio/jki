@@ -183,8 +183,9 @@ func (o *Options) Run() error {
 func NewCmdDeploy(f factory.Factory) *cobra.Command {
 	o := Options{}
 	cmd := &cobra.Command{
-		Use:   "deploy [[resource/]name] <image> [options]",
-		Short: "Update container image of resources",
+		Use:     "deploy [resource/name] <image>",
+		Short:   "Update container image of resources",
+		Aliases: []string{"d"},
 		Long: `Update existing container image of resources.
 
   Possible resources include (case insensitive):
