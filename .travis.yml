@@ -4,7 +4,6 @@ go:
   - 1.12.x
 os:
   - linux
-  - osx
 install: true
 env:
   - GO111MODULE=on NAME=jki
@@ -16,7 +15,7 @@ cache:
     - "$HOME/.cache/go-build"
     - "$HOME/gopath/pkg/mod"
 before_deploy:
-  - make VERSION=${TRAVIS_TAG#v}
+  - make -j releases
 deploy:
   provider: releases
   name: Release $TRAVIS_TAG
