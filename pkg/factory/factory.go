@@ -18,6 +18,7 @@ type Factory interface {
 	LoadRegistries() (defReg string, registries map[string]*registry.Registry, err error)
 	ToResolver() (*registry.Resolver, error)
 	KubeClient() (*kubernetes.Clientset, error)
+	ConfigPath() string
 }
 
 type factoryImpl struct {

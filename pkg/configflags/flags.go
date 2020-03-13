@@ -67,6 +67,10 @@ func (f *ConfigFlags) KubeClient() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
+func (f *ConfigFlags) ConfigPath() string {
+	return f.configPath
+}
+
 func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	homedir := utils.HomeDir()
 	flags.StringVar(&f.configPath, "jkiconfig", filepath.Join(homedir, ".jki.yaml"), "Config path")
