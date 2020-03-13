@@ -8,9 +8,10 @@ import (
 
 // DockerHubRegistry can be any registry which is compatible with Docker Hub.
 type DockerHubRegistry struct {
-	Server   string `json:"server" yaml:"server"`
-	Username string `json:"username" yaml:"username"`
-	Password string `json:"password" yaml:"password"`
+	Namespace string `json:"namespace" yaml:"namespace"`
+	Server    string `json:"server" yaml:"server"`
+	Username  string `json:"username" yaml:"username"`
+	Password  string `json:"password" yaml:"password"`
 }
 
 var _ innerRegistryInterface = (*DockerHubRegistry)(nil)
@@ -22,6 +23,9 @@ func (r *DockerHubRegistry) CreateRepoIfNotExists(repo string) error {
 func (r *DockerHubRegistry) Prefix() string {
 	if len(r.Server) == 0 {
 		return r.Username
+	}
+	if len(r.Namespace) > 0 {
+		return fmt.Sprintf("%s/%s", r.Server, r.Namespace)
 	}
 	return r.Server
 }
