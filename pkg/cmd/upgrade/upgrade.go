@@ -175,6 +175,9 @@ func extractAsset(fp string) error {
 		case tar.TypeDir: // dir
 			continue
 		case tar.TypeReg: // regular file
+			if header.Name != "jki" {
+				continue
+			}
 			binFp := filepath.Join(os.TempDir(), "jki")
 			binFile, err := os.OpenFile(binFp, os.O_WRONLY|os.O_CREATE, 0600)
 			if err != nil {
@@ -199,8 +202,8 @@ func (o *Options) Run() error {
 	if err != nil {
 		return err
 	}
-	if release.TagName == "v"+info.Version {
-		fmt.Printf("v%s is already the latest version.", info.Version)
+	if release.TagName == info.Version {
+		fmt.Printf("%s is already the latest version.\n", info.Version)
 		return nil
 	}
 	intact := true

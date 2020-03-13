@@ -20,7 +20,6 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 		Short: "Modify config file",
 	}
 
-	configPathFlag := "jkiconfig"
 	saveDefaultConfig := false
 	initCmd := &cobra.Command{
 		Use:   "init",
@@ -30,7 +29,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 				fmt.Print(defaultConfig)
 				return
 			}
-			configPath := cmd.Flag(configPathFlag).Value.String()
+			configPath := f.ConfigPath()
 			_, err := os.Stat(configPath)
 			if err == nil {
 				fmt.Printf("%s already exists\n", configPath)
@@ -57,7 +56,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 					editor = "notepad"
 				}
 			}
-			configPath := cmd.Flag(configPathFlag).Value.String()
+			configPath := f.ConfigPath()
 			c := exec.Command(editor, configPath)
 			c.Stdin = os.Stdin
 			c.Stdout = os.Stdout
@@ -70,7 +69,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 		Use:   "view",
 		Short: "Display settings from the config file",
 		Run: func(cmd *cobra.Command, args []string) {
-			configPath := cmd.Flag(configPathFlag).Value.String()
+			configPath := f.ConfigPath()
 			data, err := ioutil.ReadFile(configPath)
 			if err != nil {
 				log.Fatal(err)
@@ -83,7 +82,7 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 		Use:   "check",
 		Short: "Test configuration and exit",
 		Run: func(cmd *cobra.Command, args []string) {
-			configPath := cmd.Flag(configPathFlag).Value.String()
+			configPath := f.ConfigPath()
 			_, regs, err := registry.LoadRegistries(configPath)
 			if err != nil {
 				log.Fatal(err)
@@ -98,9 +97,25 @@ func NewCmdConfig(f factory.Factory) *cobra.Command {
 		},
 	}
 
+	getRegsCmd := &cobra.Command{
+		Use:   "get-registries",
+		Short: "List all registries defined in the config",
+		Run: func(cmd *cobra.Command, args []string) {
+			configPath := f.ConfigPath()
+			_, regs, err := registry.LoadRegistries(configPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			for name := range regs {
+				fmt.Println(name)
+			}
+		},
+	}
+
 	cmd.AddCommand(initCmd)
 	cmd.AddCommand(editCmd)
 	cmd.AddCommand(viewCmd)
 	cmd.AddCommand(checkCmd)
+	cmd.AddCommand(getRegsCmd)
 	return cmd
 }

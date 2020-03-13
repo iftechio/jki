@@ -67,14 +67,16 @@ func (f *ConfigFlags) KubeClient() (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
+func (f *ConfigFlags) ConfigPath() string {
+	return f.configPath
+}
+
 func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	homedir := utils.HomeDir()
 	flags.StringVar(&f.configPath, "jkiconfig", filepath.Join(homedir, ".jki.yaml"), "Config path")
 	flags.StringVarP(&f.registry, "registry", "r", "", "The desired registry. If not set, use the `default-registry` in config.")
-	flags.StringVarP(&f.kubeconfig, "kubeconfig", "", filepath.Join(homedir, ".kube", "config"), "The path to kubeconfig. If not set `~/.kube/config` will be used")
-	flags.StringVarP(&f.namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request")
-	f.konfigFlags.KubeConfig = &f.kubeconfig
-	f.konfigFlags.Namespace = &f.namespace
+	flags.StringVar(f.konfigFlags.KubeConfig, "kubeconfig", filepath.Join(homedir, ".kube", "config"), "The path to kubeconfig. If not set `~/.kube/config` will be used")
+	flags.StringVarP(f.konfigFlags.Namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request")
 }
 
 func New() *ConfigFlags {
