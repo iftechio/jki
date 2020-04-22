@@ -10,6 +10,7 @@ import (
 	"github.com/iftechio/jki/pkg/cmd/config"
 	"github.com/iftechio/jki/pkg/cmd/cp"
 	"github.com/iftechio/jki/pkg/cmd/deploy"
+	"github.com/iftechio/jki/pkg/cmd/pull"
 	"github.com/iftechio/jki/pkg/cmd/transferimage"
 	"github.com/iftechio/jki/pkg/cmd/upgrade"
 	"github.com/iftechio/jki/pkg/cmd/version"
@@ -34,6 +35,7 @@ func main() {
 		config.NewCmdConfig,
 		cp.NewCmdCp,
 		deploy.NewCmdDeploy,
+		pull.NewCmdPull,
 		transferimage.NewCmdTransferImage,
 		upgrade.NewCmdUpgrade,
 		version.NewCmdVersion,
