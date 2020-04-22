@@ -16,7 +16,8 @@ Table of Contents
     * [2.3 构建镜像](#23-构建镜像)
     * [2.4 部署镜像](#24-部署镜像)
     * [2.5 跨云服务商复制镜像](#25-跨云服务商复制镜像)
-    * [2.6 自动替换修复 deployment 不能访问的镜像](#26-自动替换修复-deployment-不能访问的镜像)
+    * [2.6 拉取镜像](#26-拉取镜像)
+    * [2.7 自动替换修复 deployment 不能访问的镜像](#27-自动替换修复-deployment-不能访问的镜像)
 
 ## 0. Features
 
@@ -192,7 +193,13 @@ $ jki cp k8s.gcr.io/etcd:3.3.10 aws-tokyo
 $ jki cp <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo
 ```
 
-### 2.6 自动替换修复 deployment 不能访问的镜像
+### 2.6 拉取镜像
+
+```
+$ jki pull <YOUR ACCOUNT ID>.dkr.ecr.ap-northeast-1.amazonaws.com/foo:bar
+```
+
+### 2.7 自动替换修复 deployment 不能访问的镜像
 
 执行命令后会逐个提示替换无法现在的镜像
 
