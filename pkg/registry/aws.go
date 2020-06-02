@@ -15,14 +15,14 @@ import (
 )
 
 type AWSRegistry struct {
-	Region              string `json:"region" yaml:"region"`
-	AccountID           string `json:"account_id" yaml:"account_id"`
-	AccessKey           string `json:"access_key" yaml:"access_key"`
-	SecretAccessKey     string `json:"secret_access_key" yaml:"secret_access_key"`
-	LifecyclePolicyText string `json:"lifecycle_policy_text" yaml:"lifecycle_policy_text"`
+	Region              string `json:"region"`
+	AccountID           string `json:"account_id"`
+	AccessKey           string `json:"access_key"`
+	SecretAccessKey     string `json:"secret_access_key"`
+	LifecyclePolicyText string `json:"lifecycle_policy_text"`
 }
 
-var _ innerRegistryInterface = (*AWSRegistry)(nil)
+var _ innerInterface = (*AWSRegistry)(nil)
 
 func newAWSSession(region, accessKey, secretKey string) (*session.Session, error) {
 	return session.NewSession(&aws.Config{
@@ -86,6 +86,14 @@ func (r *AWSRegistry) Prefix() string {
 		return domain + ".cn"
 	}
 	return domain
+}
+
+func (r *AWSRegistry) MatchImage(image string) bool {
+	domain := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com", r.AccountID, r.Region)
+	if strings.HasPrefix(r.Region, "cn-") {
+		domain += ".cn"
+	}
+	return strings.HasPrefix(image, domain)
 }
 
 func (r *AWSRegistry) Host() string {

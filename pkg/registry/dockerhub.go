@@ -2,19 +2,20 @@ package registry
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 )
 
 // DockerHubRegistry can be any registry which is compatible with Docker Hub.
 type DockerHubRegistry struct {
-	Namespace string `json:"namespace" yaml:"namespace"`
-	Server    string `json:"server" yaml:"server"`
-	Username  string `json:"username" yaml:"username"`
-	Password  string `json:"password" yaml:"password"`
+	Namespace string `json:"namespace"`
+	Server    string `json:"server"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
 }
 
-var _ innerRegistryInterface = (*DockerHubRegistry)(nil)
+var _ innerInterface = (*DockerHubRegistry)(nil)
 
 func (r *DockerHubRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
@@ -28,6 +29,21 @@ func (r *DockerHubRegistry) Prefix() string {
 		return fmt.Sprintf("%s/%s", r.Server, r.Namespace)
 	}
 	return r.Server
+}
+
+func (r *DockerHubRegistry) MatchImage(image string) bool {
+	var prefixes []string
+	if len(r.Server) == 0 {
+		prefixes = append(prefixes, fmt.Sprintf("%s/", r.Username), fmt.Sprintf("docker.io/%s/", r.Username))
+	} else {
+		prefixes = append(prefixes, fmt.Sprintf("%s/%s", r.Server, r.Namespace))
+	}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(image, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *DockerHubRegistry) Host() string {

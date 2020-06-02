@@ -2,15 +2,16 @@ package registry
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 func LoadRegistries(configPath string) (defaultRegistry string, registries map[string]*Registry, err error) {
 	type Config struct {
-		Registries      []*Registry `yaml:"registries"`
-		DefaultRegistry string      `yaml:"default-registry"`
+		Registries      []*Registry `json:"registries"`
+		DefaultRegistry string      `json:"default-registry"`
 	}
 
 	f, err := os.Open(configPath)
@@ -19,15 +20,18 @@ func LoadRegistries(configPath string) (defaultRegistry string, registries map[s
 	}
 	defer f.Close()
 
-	dec := yaml.NewDecoder(f)
+	data, err := ioutil.ReadAll(f)
+	if err != nil {
+		return "", nil, err
+	}
 	var config Config
-	err = dec.Decode(&config)
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return "", nil, fmt.Errorf("decode yaml: %s", err)
 	}
 
-	nreg := len(config.Registries)
-	if nreg == 0 {
+	nReg := len(config.Registries)
+	if nReg == 0 {
 		return "", nil, fmt.Errorf("no registries found")
 	}
 
@@ -36,9 +40,9 @@ func LoadRegistries(configPath string) (defaultRegistry string, registries map[s
 		defReg = config.Registries[0].Name
 	}
 
-	regs := make(map[string]*Registry, nreg)
+	regs := make(map[string]*Registry, nReg)
 	for i, reg := range config.Registries {
-		if len(reg.Name) == 0 && nreg > 1 {
+		if len(reg.Name) == 0 && nReg > 1 {
 			return "", nil, fmt.Errorf("name of registry %d cannot be empty", i)
 		}
 		regs[reg.Name] = reg

@@ -2,6 +2,7 @@ package transferimage
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -67,7 +68,7 @@ func (o *transferImageOptions) fixPodSpec(podSpec *apiv1.PodTemplateSpec, it bro
 		if con.Image == it.Image {
 			// copy to accessable registry
 			img := image.FromString(it.Image)
-			o.cp.Run([]string{it.Image})
+			_ = o.cp.Run([]string{it.Image})
 
 			// replace with new domain
 			img.Domain = domain
@@ -80,10 +81,13 @@ func (o *transferImageOptions) fixPodSpec(podSpec *apiv1.PodTemplateSpec, it bro
 func (o *transferImageOptions) Run() (err error) {
 	fmt.Printf("Searching for deploy/ds to fix in namespace: %s\n", o.namespace)
 	var itemsToFix []brokenObject
-
-	pendingPodsList, err := o.kubeClient.CoreV1().Pods(o.namespace).List(metav1.ListOptions{
+	ctx := context.Background()
+	pendingPodsList, err := o.kubeClient.CoreV1().Pods(o.namespace).List(ctx, metav1.ListOptions{
 		FieldSelector: "status.phase=Pending",
 	})
+	if err != nil {
+		return err
+	}
 
 	errPullingPods := make([]apiv1.Pod, 0)
 
@@ -99,7 +103,7 @@ func (o *transferImageOptions) Run() (err error) {
 	for _, pod := range errPullingPods {
 		owner := pod.OwnerReferences[0]
 		if owner.Kind == "ReplicaSet" {
-			rs, err := o.kubeClient.AppsV1().ReplicaSets(o.namespace).Get(owner.Name, metav1.GetOptions{})
+			rs, err := o.kubeClient.AppsV1().ReplicaSets(o.namespace).Get(ctx, owner.Name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -139,32 +143,32 @@ func (o *transferImageOptions) Run() (err error) {
 		if strings.ToLower(strings.TrimSpace(string(sentence))) == "y" {
 			switch it.Kind {
 			case "Deployment":
-				deploy, err := deploymentClient.Get(it.Name, metav1.GetOptions{})
+				deploy, err := deploymentClient.Get(ctx, it.Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}
 				o.fixPodSpec(&deploy.Spec.Template, it, o.dstRegistry.Prefix())
-				_, err = deploymentClient.Update(deploy)
+				_, err = deploymentClient.Update(ctx, deploy, metav1.UpdateOptions{})
 				if err != nil {
 					return err
 				}
 			case "DaemonSet":
-				ds, err := dsClient.Get(it.Name, metav1.GetOptions{})
+				ds, err := dsClient.Get(ctx, it.Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}
 				o.fixPodSpec(&ds.Spec.Template, it, o.dstRegistry.Prefix())
-				_, err = dsClient.Update(ds)
+				_, err = dsClient.Update(ctx, ds, metav1.UpdateOptions{})
 				if err != nil {
 					return err
 				}
 			case "StatefulSet":
-				sts, err := stsClient.Get(it.Name, metav1.GetOptions{})
+				sts, err := stsClient.Get(ctx, it.Name, metav1.GetOptions{})
 				if err != nil {
 					return err
 				}
 				o.fixPodSpec(&sts.Spec.Template, it, o.dstRegistry.Prefix())
-				_, err = stsClient.Update(sts)
+				_, err = stsClient.Update(ctx, sts, metav1.UpdateOptions{})
 				if err != nil {
 					return err
 				}

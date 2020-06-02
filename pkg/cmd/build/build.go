@@ -236,7 +236,7 @@ func (o *Options) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageB
 			if _, ok := mem[name]; ok {
 				continue
 			}
-			if strings.HasPrefix(baseImage, reg.Prefix()) {
+			if reg.MatchImage(baseImage) {
 				authCfg, err := reg.GetAuthConfig()
 				if err != nil {
 					return fmt.Errorf("get authconfig of %s: %s", name, err)

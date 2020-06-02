@@ -25,17 +25,17 @@ func toRegistryAuth(user, passwd string) (string, error) {
 }
 
 type Registry struct {
-	Name      string             `json:"name" yaml:"name"`
-	AliCloud  *AliCloudRegistry  `json:"aliyun" yaml:"aliyun"`
-	AWS       *AWSRegistry       `json:"aws" yaml:"aws"`
-	DockerHub *DockerHubRegistry `json:"dockerhub" yaml:"dockerhub"`
+	Name      string             `json:"name"`
+	AliCloud  *AliCloudRegistry  `json:"aliyun"`
+	AWS       *AWSRegistry       `json:"aws"`
+	DockerHub *DockerHubRegistry `json:"dockerhub"`
 }
 
-var _ RegistryInterface = (*Registry)(nil)
+var _ Interface = (*Registry)(nil)
 
 var publicReg = &PublicRegistry{}
 
-func (r *Registry) delegate() innerRegistryInterface {
+func (r *Registry) delegate() innerInterface {
 	switch {
 	case r.AliCloud != nil:
 		return r.AliCloud
@@ -50,6 +50,10 @@ func (r *Registry) delegate() innerRegistryInterface {
 
 func (r *Registry) Prefix() string {
 	return r.delegate().Prefix()
+}
+
+func (r *Registry) MatchImage(image string) bool {
+	return r.delegate().MatchImage(image)
 }
 
 func (r *Registry) Host() string {

@@ -164,7 +164,7 @@ func (o *Options) removeImages(ctx context.Context, imageNames ...string) {
 	return
 }
 
-func (o *Options) completeImageStr(imgStr string, reg registry.RegistryInterface) (string, error) {
+func (o *Options) completeImageStr(imgStr string, reg registry.Interface) (string, error) {
 	if strings.Contains(imgStr, ":") {
 		return imgStr, nil
 	}

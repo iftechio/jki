@@ -3,21 +3,22 @@ package registry
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/cr"
 	"github.com/docker/docker/api/types"
 )
 
 type AliCloudRegistry struct {
-	Region          string `json:"region" yaml:"region"`
-	Namespace       string `json:"namespace" yaml:"namespace"`
-	Username        string `json:"username" yaml:"username"`
-	Password        string `json:"password" yaml:"password"`
-	AccessKey       string `json:"access_key" yaml:"access_key"`
-	SecretAccessKey string `json:"secret_access_key" yaml:"secret_access_key"`
+	Region          string `json:"region"`
+	Namespace       string `json:"namespace"`
+	Username        string `json:"username"`
+	Password        string `json:"password"`
+	AccessKey       string `json:"access_key"`
+	SecretAccessKey string `json:"secret_access_key"`
 }
 
-var _ innerRegistryInterface = (*AliCloudRegistry)(nil)
+var _ innerInterface = (*AliCloudRegistry)(nil)
 
 func (r *AliCloudRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
@@ -25,6 +26,20 @@ func (r *AliCloudRegistry) CreateRepoIfNotExists(repo string) error {
 
 func (r *AliCloudRegistry) Prefix() string {
 	return fmt.Sprintf("registry.%s.aliyuncs.com/%s", r.Region, r.Namespace)
+}
+
+func (r *AliCloudRegistry) MatchImage(image string) bool {
+	prefixes := []string{
+		fmt.Sprintf("registry.%s.aliyuncs.com/%s", r.Region, r.Namespace),
+		fmt.Sprintf("registry-vpc.%s.aliyuncs.com/%s", r.Region, r.Namespace),
+		fmt.Sprintf("registry-internal.%s.aliyuncs.com/%s", r.Region, r.Namespace),
+	}
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(image, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *AliCloudRegistry) Host() string {

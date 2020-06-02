@@ -8,7 +8,7 @@ import (
 type PublicRegistry struct {
 }
 
-var _ innerRegistryInterface = (*PublicRegistry)(nil)
+var _ innerInterface = (*PublicRegistry)(nil)
 
 func (r *PublicRegistry) CreateRepoIfNotExists(repo string) error {
 	return nil
@@ -16,6 +16,10 @@ func (r *PublicRegistry) CreateRepoIfNotExists(repo string) error {
 
 func (r *PublicRegistry) Prefix() string {
 	return ""
+}
+
+func (r *PublicRegistry) MatchImage(image string) bool {
+	return true
 }
 
 func (r *PublicRegistry) Host() string {
