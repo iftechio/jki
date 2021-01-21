@@ -26,24 +26,6 @@ import (
 	"github.com/iftechio/jki/pkg/utils"
 )
 
-func printInfo(msg string) {
-	fmt.Printf(">>>>> %s\n", msg)
-}
-
-func setClipboard(data string) error {
-	var cmd *exec.Cmd
-	switch runtime.GOOS {
-	case "linux":
-		cmd = exec.Command("xclip", "-selection", "c")
-	case "darwin":
-		cmd = exec.Command("pbcopy")
-	default:
-		return fmt.Errorf("%s not supported", runtime.GOOS)
-	}
-	cmd.Stdin = strings.NewReader(data)
-	return cmd.Run()
-}
-
 func notifyUser(msg, title string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
@@ -181,7 +163,7 @@ func (o *Options) Run() error {
 		_ = notifyUser(" ", "镜像构建失败")
 		return err
 	}
-	printInfo("镜像构建成功")
+	utils.PrintInfo("镜像构建成功")
 
 	if o.noPush {
 		return nil
@@ -203,7 +185,7 @@ func (o *Options) Run() error {
 		return err
 	}
 
-	printInfo("开始上传镜像")
+	utils.PrintInfo("开始上传镜像")
 	defer pushResp.Close()
 	err = jsonmessage.DisplayJSONMessagesStream(pushResp, os.Stdout, termFd, isTerm, nil)
 	if err != nil {
@@ -213,8 +195,8 @@ func (o *Options) Run() error {
 
 	fmt.Println("镜像上传成功:")
 	fmt.Println(image)
-	_ = setClipboard(image)
-	printInfo("镜像地址已复制到粘贴板")
+	_ = utils.SetClipboard(image)
+	utils.PrintInfo("镜像地址已复制到粘贴板")
 	_ = notifyUser(repoWithTag, "镜像构建并上传成功")
 	return nil
 }
@@ -264,7 +246,7 @@ func (o *Options) runWithoutBuildKit(ctx context.Context, buildOpts types.ImageB
 	if err != nil {
 		return err
 	}
-	printInfo("开始构建镜像")
+	utils.PrintInfo("开始构建镜像")
 	defer resp.Body.Close()
 
 	termFd, isTerm := term.GetFdInfo(os.Stdout)
