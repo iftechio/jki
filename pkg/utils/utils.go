@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -85,4 +87,24 @@ func ConvertKVStringsToMapWithNil(values []string) map[string]*string {
 	}
 
 	return result
+}
+
+// SetClipboard copies data to the shear plate of the system
+func SetClipboard(data string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("xclip", "-selection", "c")
+	case "darwin":
+		cmd = exec.Command("pbcopy")
+	default:
+		return fmt.Errorf("%s not supported", runtime.GOOS)
+	}
+	cmd.Stdin = strings.NewReader(data)
+	return cmd.Run()
+}
+
+// PrintInfo prints msg to console
+func PrintInfo(msg string) {
+	fmt.Printf(">>>>> %s\n", msg)
 }

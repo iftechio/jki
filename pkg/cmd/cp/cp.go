@@ -86,7 +86,7 @@ func (o *Options) Run(args []string) error {
 				return err
 			}
 
-			fmt.Printf("===== Pulling %s =====\n", frImg)
+			utils.PrintInfo(fmt.Sprintf("Pulling %s", frImg))
 			defer out.Close()
 
 			err = jsonmessage.DisplayJSONMessagesStream(out, os.Stdout, termFd, isTerm, nil)
@@ -118,7 +118,7 @@ func (o *Options) Run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("===== Pushing %s =====\n", toImg)
+	utils.PrintInfo(fmt.Sprintf("Pushing %s", toImg))
 	defer pushOut.Close()
 
 	err = jsonmessage.DisplayJSONMessagesStream(pushOut, os.Stdout, termFd, isTerm, nil)
@@ -130,7 +130,9 @@ func (o *Options) Run(args []string) error {
 		o.removeImages(ctx, frImg, toImg)
 	}
 
-	fmt.Println("Done!")
+	utils.PrintInfo("镜像复制成功")
+	utils.PrintInfo("镜像地址已复制到粘贴板")
+	utils.SetClipboard(toImg)
 	return nil
 }
 
