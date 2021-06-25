@@ -35,7 +35,7 @@ registries:
 #
 #    # optional 企业版可自己配host
 #    # 如果不填将从 aliyun 的 api 取host, 需要提供access_key, secret_access_key
-#    #instance_Host: abc-registry.cn-hangzhou.cr.aliyuncs.com
+#    #instance_host: abc-registry.cn-hangzhou.cr.aliyuncs.com
 
 #- name: aws-tokyo
 #  aws:
