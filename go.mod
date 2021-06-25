@@ -10,7 +10,7 @@ replace github.com/containerd/containerd => github.com/containerd/containerd v1.
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/aliyun/alibaba-cloud-sdk-go v1.61.58
+	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1160
 	github.com/aws/aws-sdk-go v1.29.23
 	github.com/containerd/console v0.0.0-20191219165238-8375c3424e4d
 	github.com/docker/docker v1.14.0-0.20190319215453-e7b5f7dbe98c

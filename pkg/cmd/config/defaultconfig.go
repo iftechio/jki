@@ -19,6 +19,24 @@ registries:
     namespace: test
 
     region: cn-hangzhou
+#- name: ali-ee
+#  aliyun_ee:
+#    #username: user
+#    #password: passwd
+#
+#    access_key: foo
+#    secret_access_key: bar
+#    
+#    namespace: test
+#    region: cn-hangzhou
+#	
+#    # 企业实例id
+#    instanceId: cri-123456
+#
+#    # optional 企业版可自己配host
+#    # 如果不填将从 aliyun 的 api 取host, 需要提供access_key, secret_access_key
+#    #instance_host: abc-registry.cn-hangzhou.cr.aliyuncs.com
+
 #- name: aws-tokyo
 #  aws:
 #    access_key: foo

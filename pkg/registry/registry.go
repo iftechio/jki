@@ -25,10 +25,11 @@ func toRegistryAuth(user, passwd string) (string, error) {
 }
 
 type Registry struct {
-	Name      string             `json:"name"`
-	AliCloud  *AliCloudRegistry  `json:"aliyun"`
-	AWS       *AWSRegistry       `json:"aws"`
-	DockerHub *DockerHubRegistry `json:"dockerhub"`
+	Name       string              `json:"name"`
+	AliCloud   *AliCloudRegistry   `json:"aliyun"`
+	AliCloudEE *AliCloudEERegistry `json:"aliyun_ee"`
+	AWS        *AWSRegistry        `json:"aws"`
+	DockerHub  *DockerHubRegistry  `json:"dockerhub"`
 }
 
 var _ Interface = (*Registry)(nil)
@@ -39,6 +40,8 @@ func (r *Registry) delegate() innerInterface {
 	switch {
 	case r.AliCloud != nil:
 		return r.AliCloud
+	case r.AliCloudEE != nil:
+		return r.AliCloudEE
 	case r.AWS != nil:
 		return r.AWS
 	case r.DockerHub != nil:
