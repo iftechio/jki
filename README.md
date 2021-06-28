@@ -77,8 +77,18 @@ registries:
     # 这个 namespace 指的是容器镜像服务里的命名空间
     # 可以到 https://cr.console.aliyun.com/cn-hangzhou/instances/namespaces 查看
     namespace: <REGISTRY NAMESPACE>
-
+# 阿里云企业版    
+- name: ali-ee
+  aliyun_ee:
+    access_key: 123
+    secret_access_key: 456
+    namespace: test
     region: cn-hangzhou
+    # 企业实例id
+    instance_id: cri-123456
+    # optional 企业版可自己配host
+    # 如果不填将从 aliyun 的 api 取host, 需要提供access_key, secret_access_key
+    #instance_host: abc-registry.cn-hangzhou.cr.aliyuncs.com
 - name: aws-tokyo
   aws:
     access_key: <YOUR ACCESS KEY>
