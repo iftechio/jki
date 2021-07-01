@@ -28,6 +28,7 @@ Table of Contents
 
 ## 1. 安装最新版本
 
+### 直接下载二进制文件
 ```
 curl -s https://api.github.com/repos/iftechio/jki/releases/latest \
   | grep browser_download_url \
@@ -38,6 +39,12 @@ curl -s https://api.github.com/repos/iftechio/jki/releases/latest \
 tar --strip-components=1 -xf jki*
 
 sudo cp jki /usr/local/bin/
+```
+
+### 使用 brew 安装
+```
+brew tap iftechio/jike
+brew install jki
 ```
 
 ## 2. 使用方法
