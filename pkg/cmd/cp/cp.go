@@ -23,6 +23,7 @@ type Options struct {
 	dockerClient *client.Client
 	dstRegistry  *registry.Registry
 	saveImage    bool
+	platform     string
 }
 
 func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
@@ -48,6 +49,7 @@ func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string)
 		return fmt.Errorf("registry not found: %s", dstReg)
 	}
 	o.dstRegistry = registries[dstReg]
+	o.platform = f.Platform()
 	return nil
 }
 
@@ -81,7 +83,7 @@ func (o *Options) Run(args []string) error {
 				return err
 			}
 
-			out, err := o.dockerClient.ImagePull(ctx, frImg, types.ImagePullOptions{RegistryAuth: frToken})
+			out, err := o.dockerClient.ImagePull(ctx, frImg, types.ImagePullOptions{RegistryAuth: frToken, Platform: o.platform})
 			if err != nil {
 				return err
 			}

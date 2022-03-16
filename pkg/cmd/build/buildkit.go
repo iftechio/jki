@@ -129,6 +129,7 @@ func (o *Options) runBuildKit(ctx context.Context, buildOpts types.ImageBuildOpt
 		buildOpts.SessionID = s.ID()
 		buildOpts.BuildID = time.Now().String()
 		buildOpts.Dockerfile = path.Base(o.dockerFileName)
+		buildOpts.Platform = o.platform
 
 		response, err := o.dockerClient.ImageBuild(ctx, nil, buildOpts)
 		if err != nil {

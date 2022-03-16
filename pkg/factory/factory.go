@@ -19,6 +19,7 @@ type Factory interface {
 	ToResolver() (*registry.Resolver, error)
 	KubeClient() (*kubernetes.Clientset, error)
 	ConfigPath() string
+	Platform() string
 }
 
 type factoryImpl struct {

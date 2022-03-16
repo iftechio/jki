@@ -51,6 +51,7 @@ type Options struct {
 	noPush          bool
 	noCache         bool
 	pull            bool
+	platform        string
 
 	dstRegistry   *registry.Registry
 	allRegistries map[string]*registry.Registry
@@ -97,6 +98,7 @@ func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string)
 	}
 	o.dstRegistry = registries[defReg]
 	o.allRegistries = registries
+	o.platform = f.Platform()
 	return nil
 }
 
@@ -151,6 +153,7 @@ func (o *Options) Run() error {
 		NoCache:    o.noCache,
 		BuildArgs:  utils.ConvertKVStringsToMapWithNil(o.buildArgs),
 		Labels:     utils.ConvertKVStringsToMap(o.labels),
+		Platform:   o.platform,
 	}
 
 	if o.disableBuildKit {
