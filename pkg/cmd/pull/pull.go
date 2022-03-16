@@ -66,7 +66,6 @@ func (o *Options) Run() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("pull image with platform", o.platform)
 	out, err := o.dockerClient.ImagePull(ctx, o.imageRef, types.ImagePullOptions{RegistryAuth: token, Platform: o.platform})
 	if err != nil {
 		return err
