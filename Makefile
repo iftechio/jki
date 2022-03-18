@@ -14,16 +14,24 @@ all:
 	$(GOBUILD) -o "$(NAME)_$(VERSION)_$(OS)_$(ARCH)/$(NAME)"
 	@tar czf  "$(NAME)_$(VERSION)_$(OS)_$(ARCH).tar.gz" "$(NAME)_$(VERSION)_$(OS)_$(ARCH)"
 
-.PHONY: linux_amd64 darwin_amd64 releases
+.PHONY: linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 releases
 linux_amd64:
 	GOARCH=amd64 GOOS=linux $(GOBUILD) -o $(NAME)_$(VERSION)_$@/$(NAME)
+	tar czf "$(NAME)_$(VERSION)_$@.tar.gz" "$(NAME)_$(VERSION)_$@"
+
+linux_arm64:
+	GOARCH=arm64 GOOS=linux $(GOBUILD) -o $(NAME)_$(VERSION)_$@/$(NAME)
 	tar czf "$(NAME)_$(VERSION)_$@.tar.gz" "$(NAME)_$(VERSION)_$@"
 
 darwin_amd64:
 	GOARCH=amd64 GOOS=darwin $(GOBUILD) -o $(NAME)_$(VERSION)_$@/$(NAME)
 	tar czf "$(NAME)_$(VERSION)_$@.tar.gz" "$(NAME)_$(VERSION)_$@"
 
-releases: linux_amd64 darwin_amd64
+darwin_arm64:
+	GOARCH=arm64 GOOS=darwin $(GOBUILD) -o $(NAME)_$(VERSION)_$@/$(NAME)
+	tar czf "$(NAME)_$(VERSION)_$@.tar.gz" "$(NAME)_$(VERSION)_$@"
+
+releases: linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
 
 .PHONY: install
 install:

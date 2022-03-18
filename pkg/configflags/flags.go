@@ -3,6 +3,7 @@ package configflags
 import (
 	"fmt"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -19,6 +20,7 @@ import (
 type ConfigFlags struct {
 	configPath  string
 	registry    string
+	platform    string
 	kubeconfig  string
 	namespace   string
 	konfigFlags *genericclioptions.ConfigFlags
@@ -26,6 +28,13 @@ type ConfigFlags struct {
 
 func (f *ConfigFlags) ToRESTConfig() (*rest.Config, error) {
 	return f.konfigFlags.ToRESTConfig()
+}
+
+func (f *ConfigFlags) Platform() string {
+	if f.platform == "" {
+		return runtime.GOARCH
+	}
+	return f.platform
 }
 
 func (f *ConfigFlags) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
@@ -75,6 +84,7 @@ func (f *ConfigFlags) AddFlags(flags *pflag.FlagSet) {
 	homedir := utils.HomeDir()
 	flags.StringVar(&f.configPath, "jkiconfig", filepath.Join(homedir, ".jki.yaml"), "Config path")
 	flags.StringVarP(&f.registry, "registry", "r", "", "The desired registry. If not set, use the `default-registry` in config.")
+	flags.StringVarP(&f.platform, "platform", "p", "", fmt.Sprintf("The desired platform. (default \"%s\")", runtime.GOARCH))
 	flags.StringVar(f.konfigFlags.KubeConfig, "kubeconfig", filepath.Join(homedir, ".kube", "config"), "The path to kubeconfig. If not set `~/.kube/config` will be used")
 	flags.StringVarP(f.konfigFlags.Namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request")
 }

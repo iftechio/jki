@@ -20,6 +20,7 @@ type Options struct {
 	resolver     *registry.Resolver
 	dockerClient *client.Client
 	imageRef     string
+	platform     string
 }
 
 func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string) error {
@@ -35,6 +36,7 @@ func (o *Options) Complete(f factory.Factory, cmd *cobra.Command, args []string)
 	}
 
 	o.imageRef = args[0]
+	o.platform = f.Platform()
 	return nil
 }
 
@@ -64,7 +66,7 @@ func (o *Options) Run() error {
 	if err != nil {
 		return err
 	}
-	out, err := o.dockerClient.ImagePull(ctx, o.imageRef, types.ImagePullOptions{RegistryAuth: token})
+	out, err := o.dockerClient.ImagePull(ctx, o.imageRef, types.ImagePullOptions{RegistryAuth: token, Platform: o.platform})
 	if err != nil {
 		return err
 	}
