@@ -115,7 +115,8 @@ func (o *Options) Run(args []string) error {
 	if err != nil {
 		return err
 	}
-	pushOut, err := o.dockerClient.ImagePush(ctx, toImg, types.ImagePushOptions{RegistryAuth: toToken})
+	utils.PrintInfo(fmt.Sprintf("Pushing %s", toImg))
+	pushOut, err := o.dockerClient.ImagePush(ctx, toImg, types.ImagePushOptions{RegistryAuth: toToken, Platform: o.platform})
 	if err != nil {
 		return err
 	}
